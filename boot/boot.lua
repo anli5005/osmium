@@ -48,12 +48,39 @@ if fs.exists("/boot/settings.lua") then
     end
   end
 
-  -- Boot the computer
-  term.setBackgroundColor(colors.black)
-  term.setTextColor(colors.white)
-  term.clear()
-  term.setCursorPos(1,1)
-  os.run({shell = shell}, toBoot)
+  if fs.exists(toBoot) then
+    -- Boot the computer
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1,1)
+    os.run(getfenv(), toBoot)
+  else
+    term.setCursorPos(1, h - 1)
+    term.clearLine()
+    if term.isColor() then
+      term.setTextColor(colors.red)
+    else
+      term.setTextColor(colors.white)
+    end
+    local error = "Cannot locate boot file"
+    term.setCursorPos(math.floor((w - string.len(error)) / 2), h - 1)
+    term.write(error)
+    sleep(3)
+    term.clear()
+    term.setCursorPos(1,1)
+    if not term.isColor() then
+      term.setTextColor(colors.lightGray)
+    end
+    term.write(toBoot)
+    print(" not found")
+    if term.isColor() then
+      term.setTextColor(colors.yellow)
+    else
+      term.setTextColor(colors.white)
+    end
+    print(os.version())
+  end
 else
   local error = "Boot settings not found"
   term.setCursorPos(math.floor((w - string.len(error)) / 2), h - 1)
