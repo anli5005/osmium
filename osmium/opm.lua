@@ -32,11 +32,16 @@ function listPackages()
   return packages
 end
 
-function require(name)
+function resolve(name)
   local path
   for i,d in ipairs(directories) do
     path = fs.combine(d, name)
     if fs.exists(path) then
+      if fs.isDir(path) and fs.exists(fs.combine(path, name .. ".lua")) then
+        path = fs.combine(path, name .. ".lua")
+      elseif fs.isDir(path) and fs.exists(fs.combine(path, name)) then
+        path = fs.combine(path, name)
+      end
       break
     elseif fs.exists(path .. ".lua") then
       path = path .. ".lua"
@@ -44,6 +49,12 @@ function require(name)
     end
     path = nil
   end
+
+  return path
+end
+
+function require(name)
+  local path = resolve(name)
 
   if path then
     local env = {}
