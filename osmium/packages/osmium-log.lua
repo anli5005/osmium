@@ -3,18 +3,14 @@ stream = nil
 logToTerminal = false
 
 function setup()
-  local writeStream = fs.open(logFile, "w")
-  writeStream.write("")
-  writeStream.close()
-
   stream = fs.open(logFile, "a")
 end
 
-logsUntilSave = 5
+logsUntilSave = 3
 
 function save()
   stream.flush()
-  logsUntilSave = 5
+  logsUntilSave = 3
 end
 
 function log(message)

@@ -2,3 +2,5 @@
 home
 .settings
 *.log
+osmium/settings
+*.ltn

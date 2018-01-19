@@ -26,22 +26,18 @@ local osmium = {}
 
 -- Setup logging
 local log = opm.require("osmium-log")
+local logStream = fs.open(log.logFile, "w")
+logStream.write("")
+logStream.close()
 log.setup()
 osmium.log = log.log
 
-osmium.log("Welcome to Osmium OS!")
+-- Finish booting
+osmium.log("Booting Osmium...")
 osmium.log("Current time: " .. textutils.formatTime(os.time()))
 osmium.log("[ ok ] Logging system initialized.")
+osmium.log("[info] Launching osmium-boot...")
 
--- TODO: Load polyfills for `window` and `term.blit`
-if not window then
-  osmium.log("[warn] Window API not found.")
-  osmium.log("[info] Attempting to use a polyfill...")
-  osmium.log("[todo] Polyfills have not been implemented.")
-end
-
-if not term.blit then
-  osmium.log("[warn] term.blit not found.")
-  osmium.log("[info] Attempting to use a polyfill...")
-  osmium.log("[todo] Polyfills have not been implemented.")
-end
+local bootEnv = {osmium = osmium}
+setmetatable(bootEnv, {__index = _G})
+os.run(bootEnv, opm.resolve("osmium-boot"))
