@@ -1,7 +1,21 @@
 function create(x, y, w, h)
-  local self = {x = x, y = y, w = w, h = h, focused = false, screen = nil, needsRedraw = true}
+  local self = {x = x, y = y, w = w, h = h, focused = false, screen = nil, needsRedraw = true, acceptsFocus = true}
 
-  function self.draw()
+  function self.redraw()
+    self.needsRedraw = true
+    if self.screen and self.screen.window then
+      self.screen.draw()
+    end
+  end
+
+  function self.forceRedraw()
+    self.needsRedraw = true
+    if self.screen and self.screen.window then
+      self.screen.forceDraw()
+    end
+  end
+
+  function self.draw(window)
   end
 
   function self.click()
@@ -27,4 +41,12 @@ function create(x, y, w, h)
 
   function self.paste()
   end
+
+  function self.focus()
+  end
+
+  function self.blur()
+  end
+
+  return self
 end
