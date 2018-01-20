@@ -48,5 +48,8 @@ function create(x, y, w, h)
   function self.blur()
   end
 
+  function self.restoreCursor()
+  end
+
   return self
 end

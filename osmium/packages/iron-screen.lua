@@ -138,6 +138,10 @@ function create(window)
         view.needsRedraw = false
       end
     end
+    term.setCursorBlink(false)
+    if didDraw and self.focusView then
+      self.focusView.restoreCursor()
+    end
   end
 
   function self.forceDraw()
@@ -146,6 +150,10 @@ function create(window)
     for i,view in ipairs(self.views) do
       view.draw(self.window)
       view.needsRedraw = false
+    end
+    term.setCursorBlink(false)
+    if self.focusView then
+      self.focusView.restoreCursor()
     end
   end
 
