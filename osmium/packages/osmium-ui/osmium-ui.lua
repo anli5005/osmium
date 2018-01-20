@@ -36,10 +36,9 @@ function text.create(x, y, w, h, text)
 end
 
 button = {}
-function button.create(x, y, w, h, text, action)
+function button.create(x, y, w, h, text)
   local self = IronView.create(x, y, w, h)
   self.text = text
-  self.action = action
   self.backgroundColor = colors.lightGray
   self.textColor = colors.black
   self.activeBackgroundColor = colors.gray
@@ -85,9 +84,7 @@ function button.create(x, y, w, h, text, action)
     if event.button == 1 and self.isActive and not self._disabled then
       self.isActive = false
       self.redraw()
-      if self.action then
-        self.action()
-      end
+      self.emit("press")
       return true
     end
   end

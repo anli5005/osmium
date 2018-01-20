@@ -23,13 +23,13 @@ button.activeBackgroundColor = colors.cyan
 button.activeTextColor = colors.white
 screen.addView(button)
 
-function button.action()
+button.on("press", function()
   screen.removeView(label)
   screen.removeView(button)
 
   local white = UI.box.create(1, 1, w, h, colors.white)
   screen.addView(white)
-end
+end)
 
 screen.forceDraw()
 eventLoop.run()

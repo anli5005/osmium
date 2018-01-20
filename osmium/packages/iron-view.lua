@@ -1,5 +1,15 @@
+local events = opm.require("iron-events")
+
 function create(x, y, w, h)
-  local self = {x = x, y = y, w = w, h = h, focused = false, screen = nil, needsRedraw = true, acceptsFocus = true}
+  local self = events.create()
+  self.x = x
+  self.y = y
+  self.w = w
+  self.h = h
+  self.focused = false
+  self.screen = nil
+  self.needsRedraw = true
+  self.acceptsFocus = true
 
   function self.redraw()
     self.needsRedraw = true
