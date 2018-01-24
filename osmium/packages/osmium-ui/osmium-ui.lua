@@ -196,6 +196,8 @@ function input.create(x, y, w, h, value, replaceChar)
     if event.keyCode == keys.backspace or event.keyCode == keys.delete then
       if self.cursorPos > 0 then
         self.cursorPos = self.cursorPos - 1
+      else
+        self.emit("ding")
       end
       self.value = string.sub(self.value, 1, self.cursorPos) .. string.sub(self.value, self.cursorPos + 2)
       self.redraw()
@@ -204,12 +206,16 @@ function input.create(x, y, w, h, value, replaceChar)
       if self.cursorPos > 0 then
         self.cursorPos = self.cursorPos - 1
         self.redraw()
+      else
+        self.emit("ding")
       end
     end
     if event.keyCode == keys.right then
       if self.cursorPos < string.len(self.value) then
         self.cursorPos = self.cursorPos + 1
         self.redraw()
+      else
+        self.emit("ding")
       end
     end
     if event.keyCode == keys.enter then
