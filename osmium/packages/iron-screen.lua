@@ -96,6 +96,14 @@ function create(window)
     end
   end
 
+  function self._callbacks.paste(clipboard)
+    if self.focusView then
+      self.focusView.paste({
+        clipboard = clipboard
+      })
+    end
+  end
+
   function self.addView(view)
     table.insert(self.views, view)
     view.screen = self
@@ -113,9 +121,7 @@ function create(window)
   end
 
   function self.focus(view)
-    if self.focusView then
-      self.focusView.focused = false
-    end
+    self.blur()
     self.focusView = view
     self.focusView.focused = true
     self.focusView.focus()
@@ -140,7 +146,7 @@ function create(window)
     end
     term.setCursorBlink(false)
     if didDraw and self.focusView then
-      self.focusView.restoreCursor()
+      self.focusView.restoreCursor(self.window)
     end
   end
 
@@ -153,7 +159,7 @@ function create(window)
     end
     term.setCursorBlink(false)
     if self.focusView then
-      self.focusView.restoreCursor()
+      self.focusView.restoreCursor(self.window)
     end
   end
 

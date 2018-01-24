@@ -29,6 +29,14 @@ button.on("press", function()
 
   local white = UI.box.create(1, 1, w, h, colors.white)
   screen.addView(white)
+
+  local textbox = UI.input.create(2, 2, 20, 1)
+  textbox.placeholder = "Username"
+  screen.addView(textbox)
+
+  local password = UI.input.create(1, h - 2, w, 3, "", "*")
+  password.placeholder = "Password"
+  screen.addView(password)
 end)
 
 screen.forceDraw()
