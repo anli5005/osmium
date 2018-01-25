@@ -12,5 +12,10 @@ if fs.exists("/osmium/settings/users.lson") then
 else
   osmium.log("[ ok ] Users file not found.")
   osmium.log("[info] Running osmium-setup...")
-  os.run(env, opm.resolve("osmium-setup"))
+
+  local result = textutils.serialize(opm.require("osmium-setup").setupOsmium())
+  local w, h = term.getSize()
+  term.setCursorPos(1, h - 5)
+  term.setTextColor(colors.white)
+  print(result)
 end

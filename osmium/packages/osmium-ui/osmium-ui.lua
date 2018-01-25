@@ -29,6 +29,8 @@ function text.create(x, y, w, h, text)
     window.setBackgroundColor(self.backgroundColor)
     window.setTextColor(self.textColor)
     window.setCursorPos(self.x, self.y)
+    window.write(string.rep(" ", self.w))
+    window.setCursorPos(self.x, self.y)
     window.write(self.text)
   end
 
@@ -183,23 +185,26 @@ function input.create(x, y, w, h, value, replaceChar)
   function self.char(event)
     self.value = string.sub(self.value, 1, self.cursorPos + 1) .. event.char .. string.sub(self.value, self.cursorPos + 2)
     self.cursorPos = self.cursorPos + 1
+    self.emit("change", self.value)
     self.redraw()
   end
 
   function self.paste(event)
     self.value = string.sub(self.value, 1, self.cursorPos + 1) .. event.clipboard .. string.sub(self.value, self.cursorPos + 2)
     self.cursorPos = self.cursorPos + string.len(event.clipboard)
+    self.emit("change", self.value)
     self.redraw()
   end
 
   function self.key(event)
     if event.keyCode == keys.backspace or event.keyCode == keys.delete then
+      self.value = string.sub(self.value, 1, self.cursorPos - 1) .. string.sub(self.value, self.cursorPos + 1)
       if self.cursorPos > 0 then
         self.cursorPos = self.cursorPos - 1
+        self.emit("change", self.value)
       else
         self.emit("ding")
       end
-      self.value = string.sub(self.value, 1, self.cursorPos) .. string.sub(self.value, self.cursorPos + 2)
       self.redraw()
     end
     if event.keyCode == keys.left then
@@ -230,6 +235,66 @@ function input.create(x, y, w, h, value, replaceChar)
   function self.setDisabled(disabled)
     self._disabled = disabled
     self.acceptsFocus = not self._disabled
+    self.redraw()
+  end
+
+  return self
+end
+
+checkbox = {}
+function checkbox.create(x, y, w, h, text, checked)
+  local self = IronView.create(x, y, w, h)
+  self.text = text
+  self.backgroundColor = colors.black
+  self.textColor = colors.white
+  self.boxBackgroundColor = colors.lightGray
+  self.checkedBackgroundColor = colors.blue
+  self.checkedTextColor = colors.lightBlue
+  self.disabledBackgroundColor = colors.white
+  self.disabledTextColor = colors.lightGray
+  self.isChecked = checked or false
+  self._disabled = false
+
+  function self.draw(window)
+    if self._disabled then
+      window.setBackgroundColor(self.disabledBackgroundColor)
+      window.setTextColor(self.disabledTextColor)
+    elseif self.isChecked then
+      window.setBackgroundColor(self.checkedBackgroundColor)
+      window.setTextColor(self.checkedTextColor)
+    else
+      window.setBackgroundColor(self.boxBackgroundColor)
+    end
+
+    window.setCursorPos(self.x, self.y)
+    if self.isChecked then
+      window.write("X")
+    else
+      window.write(" ")
+    end
+
+    if self.text then
+      window.setCursorPos(self.x + 2, self.y)
+      window.setBackgroundColor(self.backgroundColor)
+      window.setTextColor(self.textColor)
+      window.write(self.text)
+    end
+  end
+
+  function self.click(event)
+    if event.button == 1 and not self._disabled then
+      self.isChecked = not self.isChecked
+      self.emit("change", self.isChecked)
+      self.redraw()
+    end
+  end
+
+  function self.getDisabled()
+    return self._disabled
+  end
+
+  function self.setDisabled(disabled)
+    self._disabled = disabled
     self.redraw()
   end
 

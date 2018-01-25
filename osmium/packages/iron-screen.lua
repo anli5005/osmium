@@ -104,20 +104,24 @@ function create(window)
     end
   end
 
-  function self.addView(view)
+  function self.addView(view, skipRedraw)
     table.insert(self.views, view)
     view.screen = self
-    self.draw()
+    if not skipRedraw then
+      self.draw()
+    end
   end
 
-  function self.removeView(view)
+  function self.removeView(view, skipRedraw)
     for n,v in ipairs(self.views) do
       if v == view then
         v.screen = nil
         table.remove(self.views, n)
       end
     end
-    self.forceDraw()
+    if not skipRedraw then
+      self.forceDraw()
+    end
   end
 
   function self.focus(view)
