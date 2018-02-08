@@ -300,3 +300,47 @@ function checkbox.create(x, y, w, h, text, checked)
 
   return self
 end
+
+scroller = {}
+function scroller.create(view, contentHeight, color)
+  local self = {contentHeight = contentHeight, view = view, color = color or colors.lightGray, pos = 0}
+  view.scroller = self
+
+  function self.draw(window)
+    if self.contentHeight > self.view.h then
+      local x = self.view.x + self.view.w - 1
+      local y = math.ceil((self.pos / self.contentHeight) * self.view.h) + self.view.y
+      local h = math.ceil((self.view.h / self.contentHeight) * self.view.h)
+      window.setBackgroundColor(self.color)
+      for i in 0,h - 1 do
+        window.setCursorPos(x, y + i)
+        window.write(" ")
+      end
+    end
+  end
+
+  function self.scroll(event)
+    if event.direction < 0 then
+      if self.pos > 0 then
+        self.pos = self.pos - 1
+        self.view.redraw()
+      end
+    elseif event.direction > 0 then
+      if (self.pos + self.view.h) < self.contentHeight then
+        self.pos = self.pos + 1
+        self.view.redraw()
+      end
+    end
+  end
+
+  function self.click()
+  end
+
+  function self.drag()
+  end
+
+  function self.mouseUp()
+  end
+
+  return self
+end
