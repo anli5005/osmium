@@ -303,16 +303,21 @@ end
 
 scroller = {}
 function scroller.create(view, contentHeight, color)
-  local self = {contentHeight = contentHeight, view = view, color = color or colors.lightGray, pos = 0}
+  local self = {contentHeight = contentHeight, view = view, color = color or colors.lightGray, pos = 0, isScrolling = false, isVisible = (contentHeight > view.h)}
   view.scroller = self
 
+  function self.updateVisible()
+    self.isVisible = (self.contentHeight > self.view.h) or self.isScrolling
+  end
+
   function self.draw(window)
-    if self.contentHeight > self.view.h then
+    self.updateVisible()
+    if self.isVisible then
       local x = self.view.x + self.view.w - 1
-      local y = math.ceil((self.pos / self.contentHeight) * self.view.h) + self.view.y
-      local h = math.ceil((self.view.h / self.contentHeight) * self.view.h)
+      local y = math.min(math.ceil((math.max(1, self.pos + 1) / self.contentHeight) * self.view.h) + self.view.y - 1, self.view.y + self.view.h - 1)
+      local h = math.min(math.ceil((self.view.h / self.contentHeight) * self.view.h), self.view.h + 2 - y)
       window.setBackgroundColor(self.color)
-      for i in 0,h - 1 do
+      for i = 0,h - 1 do
         window.setCursorPos(x, y + i)
         window.write(" ")
       end
@@ -333,13 +338,35 @@ function scroller.create(view, contentHeight, color)
     end
   end
 
-  function self.click()
+  function self.click(event)
+    local x = self.view.x + self.view.w - 1
+    if event.x == x and event.button == 1 and self.isVisible then
+      self.isScrolling = true
+      local y = event.y - self.view.y + 1
+      local h = math.ceil((self.view.h / self.contentHeight) * self.view.h)
+      if y < self.pos or y >= self.pos + h then
+        self._dragPos = 0
+        self.drag(event)
+      elseif not self.isVisible then
+        self._dragPos = y - math.ceil((self.pos / self.contentHeight) * self.view.h)
+        self.view.redraw()
+      end
+    end
   end
 
-  function self.drag()
+  function self.drag(event)
+    if self.isScrolling then
+      local y = event.y - self.view.y
+      self.pos = math.ceil(math.min(((y + self._dragPos) / (self.view.h - 1)) * self.contentHeight, self.contentHeight - self.view.h))
+      self.view.redraw()
+    end
   end
 
   function self.mouseUp()
+    if self.isScrolling then
+      self.isScrolling = false
+      self.view.redraw()
+    end
   end
 
   return self

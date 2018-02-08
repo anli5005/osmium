@@ -58,8 +58,8 @@ function create(window)
 
   function self._callbacks.mouse_scroll(direction, x, y)
     for n = #self.views, 1, -1 do
+      local view = self.views[n]
       if x >= view.x and x < view.x + view.w and y >= view.y and y < view.y + view.h then
-        local view = self.views[n]
         if view.scroll({
           direction = direction,
           x = x,
