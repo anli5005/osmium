@@ -347,9 +347,11 @@ function scroller.create(view, contentHeight, color)
       if y < self.pos or y >= self.pos + h then
         self._dragPos = 0
         self.drag(event)
+        return true
       elseif not self.isVisible then
         self._dragPos = y - math.ceil((self.pos / self.contentHeight) * self.view.h)
         self.view.redraw()
+        return true
       end
     end
   end
@@ -357,8 +359,9 @@ function scroller.create(view, contentHeight, color)
   function self.drag(event)
     if self.isScrolling then
       local y = event.y - self.view.y
-      self.pos = math.ceil(math.min(((y + self._dragPos) / (self.view.h - 1)) * self.contentHeight, self.contentHeight - self.view.h))
+      self.pos = math.ceil(math.min(((y + (self._dragPos or 0)) / (self.view.h - 1)) * self.contentHeight, self.contentHeight - self.view.h))
       self.view.redraw()
+      return true
     end
   end
 
@@ -366,8 +369,148 @@ function scroller.create(view, contentHeight, color)
     if self.isScrolling then
       self.isScrolling = false
       self.view.redraw()
+      return true
+    end
+    return false
+  end
+
+  return self
+end
+
+list = {rows = {}}
+function list.rows.default(height)
+  local self = {height = height or 1, padding = 1, selectable = true}
+
+  function self.drawLine(window, row, num, isSelected, x, y, w, view)
+    if isSelected then
+      window.setBackgroundColor(view.selectedBackgroundColor)
+      window.setTextColor(view.selectedTextColor or colors.white)
+    else
+      window.setBackgroundColor(view.backgroundColor)
+      window.setTextColor(view.textColor or colors.black)
+    end
+    window.setCursorPos(x, y)
+    if num ~= math.ceil(self.height / 2) then
+      window.write(string.rep(" ", w))
+    else
+      window.write(string.rep(" ", self.padding) .. row.text .. string.rep(" ", math.max(0, w - (self.padding + string.len(row.text)))))
     end
   end
 
+  return self
+end
+
+function list.create(x, y, w, h, rows, row)
+  local self = IronView.create(x, y, w, h)
+  self.backgroundColor = colors.white
+  self.selectedBackgroundColor = colors.blue
+  self.textColor = colors.black
+  self.selectedTextColor = colors.white
+  self.row = row or list.rows.default()
+  self._rows = rows or {}
+  self._padding = 1
+  self.selectedRow = nil
+
+  local scroller = scroller.create(self, 0)
+
+  function self.update()
+    scroller.contentHeight = (2 * self._padding) + (#self._rows * self.row.height)
+    self.redraw()
+  end
+
+  function self.addRow(row, index)
+    table.insert(self._rows, row, index)
+    self.update()
+  end
+
+  function self.modifyRow(row, index)
+    self._rows[index] = row
+    self.redraw()
+  end
+
+  function self.removeRow(index)
+    scroller.pos = 0
+    table.remove(self._rows, index)
+    self.update()
+  end
+
+  function self.removeAllRows()
+    scroller.pos = 0
+    self._rows = {}
+    self.update()
+  end
+
+  function self.countRows()
+    return #self._rows
+  end
+
+  function self.getPadding()
+    return self._padding
+  end
+
+  function self.setPadding(padding)
+    self._padding = padding
+    self.update()
+  end
+
+  function self.draw(window)
+    local y = self.y
+    local h = (2 * self._padding) + (#self._rows * self.row.height)
+    for line = scroller.pos + 1, scroller.pos + self.h do
+      if line > self._padding and line <= h - self._padding then
+        local listY = line - self._padding
+        local index = math.ceil(listY / self.row.height)
+        local row = self._rows[index]
+        self.row.drawLine(window, row, ((listY - 1) % self.row.height) + 1, self.selectedRow == index, self.x, y, self.w, self)
+      else
+        window.setCursorPos(self.x, y)
+        window.setBackgroundColor(self.backgroundColor)
+        window.write(string.rep(" ", self.w))
+      end
+      y = y + 1
+    end
+    scroller.draw(window)
+  end
+
+  function self.scroll(event)
+    scroller.scroll(event)
+  end
+
+  function self.click(event)
+    if not scroller.click(event) then
+      local line = scroller.pos + 1 + event.y - self.y
+      local h = (2 * self._padding) + (#self._rows * self.row.height)
+      if line > self._padding and line <= h - self._padding then
+        local listY = line - self._padding
+        local index = math.ceil(listY / self.row.height)
+        local row = self._rows[index]
+        self.emit("click", row)
+        if self.selectedRow ~= index then
+          if self.selectedRow then
+            self.emit("deselect", row)
+          end
+          if self.row.selectable then
+            self.selectedRow = index
+            self.emit("select", row)
+          else
+            self.selectedRow = nil
+          end
+          self.redraw()
+        end
+      else
+        self.emit("paddingClick")
+      end
+    end
+  end
+
+  function self.drag(event)
+    scroller.drag(event)
+  end
+
+  function self.mouseUp(event)
+    scroller.mouseUp(event)
+  end
+
+  self.update()
   return self
 end

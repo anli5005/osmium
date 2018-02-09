@@ -14,38 +14,34 @@ if not fs.exists("/osmium/settings/users.lson") then
   end
 end
 
+if setupID then
+end
+
 local eventLoop = opm.require("iron-event-loop").create()
 local w, h = term.getSize()
 local termWindow = window.create(term.current(), 1, 1, w, h, true)
 local screen = opm.require("iron-screen").create(termWindow)
 
-local view = opm.require("iron-view").create(2, 2, 10, 10)
-local scroller = opm.require("osmium-ui").scroller.create(view, 10000)
-function view.draw(window)
-  window.setBackgroundColor(colors.blue)
-  window.setTextColor(colors.white)
-  for y = view.y,view.y + view.h - 1 do
-    window.setCursorPos(view.x, y)
-    for i = 1,view.w do
-      window.write(" ")
-    end
-    window.setCursorPos(view.x, y)
-    window.write(scroller.pos + y - view.y)
-  end
-  scroller.draw(window)
+local userlist = users.getUsers()
+local rows = {}
+for k,v in ipairs(userlist) do
+  table.insert(rows, {id = k, text = v.username})
 end
-function view.scroll(event)
-  scroller.scroll(event)
-end
-function view.click(event)
-  scroller.click(event)
-end
-function view.drag(event)
-  scroller.drag(event)
-end
-function view.mouseUp(event)
-  scroller.mouseUp(event)
-end
-screen.addView(view)
+
+local list = opm.require("osmium-ui").list.create(1, 1, 16, h, rows)
+list.row.height = 3
+list.backgroundColor = colors.gray
+list.textColor = colors.white
+list.update()
+
+list.on("select", function(row)
+  term.setCursorPos(18, 2)
+  term.setBackgroundColor(colors.black)
+  term.setTextColor(colors.white)
+  print(textutils.serialize(users.getUser(row.id)))
+end)
+
+screen.addView(list)
+
 screen.attach(eventLoop)
 eventLoop.run()
