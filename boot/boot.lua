@@ -10,14 +10,51 @@ term.write(osmium)
 sleep(0.1)
 
 -- Define functions
-local function openBootManager()
+local function openBootManager(settings)
   term.clear()
-  term.setCursorPos(1,1)
-  print("Boot manager")
+  term.setCursorPos(4,2)
   term.setTextColor(colors.white)
-  print("Booting into CraftOS...")
-  sleep(1)
-  return "/rom/programs/shell.lua"
+  print("Osmium Boot Manager")
+
+  local y = {}
+  local nextY = 4
+  local selected = 4
+
+  for k,v in pairs(settings.profiles) do
+    term.setCursorPos(4, nextY)
+    print(v.name)
+    y[nextY] = k
+    if k == settings.boot then
+      selected = nextY
+    end
+    nextY = nextY + 1
+  end
+
+  term.setTextColor(colors.lightGray)
+
+  while true do
+    term.setCursorPos(1, selected)
+    term.write("->")
+    local event, key = os.pullEvent("key")
+
+    if key == keys.enter then
+      break
+    elseif key == keys.up then
+      if selected > 4 then
+        term.setCursorPos(1, selected)
+        term.write("  ")
+        selected = selected - 1
+      end
+    elseif key == keys.down then
+      if selected < #settings.profiles + 3 then
+        term.setCursorPos(1, selected)
+        term.write("  ")
+        selected = selected + 1
+      end
+    end
+  end
+
+  return settings.profiles[y[selected]].boot
 end
 
 -- Read boot settings
@@ -30,7 +67,7 @@ if fs.exists("/boot/settings.lua") then
   if settings and settings.boot and settings.profiles and settings.profiles[settings.boot] and settings.profiles[settings.boot].boot then
     toBoot = settings.profiles[settings.boot].boot
   else
-    toBoot = openBootManager()
+    toBoot = openBootManager(settings)
   end
 
   local message = "Press ALT for more options"
@@ -43,7 +80,7 @@ if fs.exists("/boot/settings.lua") then
     if event == "timer" and p == timer then
       break
     elseif event == "key" and (p == 56 or p == 184) then
-      toBoot = openBootManager()
+      toBoot = openBootManager(settings)
       break
     end
   end

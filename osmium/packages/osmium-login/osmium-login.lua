@@ -1,4 +1,5 @@
 local users = opm.require("osmium-users")
+local UI = opm.require("osmium-ui")
 
 local setupID = nil
 
@@ -14,9 +15,6 @@ if not fs.exists("/osmium/settings/users.lson") then
   end
 end
 
-if setupID then
-end
-
 local eventLoop = opm.require("iron-event-loop").create()
 local w, h = term.getSize()
 local termWindow = window.create(term.current(), 1, 1, w, h, true)
@@ -28,17 +26,86 @@ for k,v in ipairs(userlist) do
   table.insert(rows, {id = k, text = v.username})
 end
 
-local list = opm.require("osmium-ui").list.create(1, 1, 16, h, rows)
+local list = UI.list.create(1, 1, 16, h, rows)
 list.row.height = 3
 list.backgroundColor = colors.gray
 list.textColor = colors.white
 list.update()
 
+local selectedUser = nil
+
+local passwordField = nil
+local unlockButton = nil
+
+local function login()
+  os.run(getfenv(), opm.resolve("osmium-env"), selectedUser)
+  screen.forceDraw()
+end
+
+local function tryPassword()
+  if selectedUser and passwordField and unlockButton then
+    if users.auth(selectedUser, passwordField.value) then
+      unlockButton.backgroundColor = colors.blue
+      passwordField.placeholderColor = colors.lightGray
+      login()
+    else
+      unlockButton.backgroundColor = colors.red
+      passwordField.placeholderColor = colors.red
+      passwordField.redraw()
+    end
+  end
+end
+
+if setupID then
+  selectedUser = setupID
+  login()
+end
+
+list.on("deselect", function()
+  selectedUser = nil
+
+  if passwordField then
+    screen.removeView(passwordField)
+  end
+
+  if unlockButton then
+    screen.removeView(unlockButton)
+  end
+end)
+
 list.on("select", function(row)
-  term.setCursorPos(18, 2)
-  term.setBackgroundColor(colors.black)
-  term.setTextColor(colors.white)
-  print(textutils.serialize(users.getUser(row.id)))
+  selectedUser = row.id
+  if userlist[selectedUser].password then
+    passwordField = UI.input.create(17, h - 2, w - 12, 3, "", "*")
+    passwordField.placeholder = "Password"
+    passwordField.backgroundColor = colors.white
+    passwordField.placeholderColor = colors.lightGray
+    passwordField.textColor = colors.black
+    screen.addView(passwordField)
+
+    unlockButton = UI.button.create(w - 3, h - 2, 4, 3, "->")
+    unlockButton.backgroundColor = colors.blue
+    unlockButton.textColor = colors.white
+    unlockButton.activeBackgroundColor = colors.cyan
+    unlockButton.activeTextColor = colors.white
+    unlockButton.setDisabled(true)
+    screen.addView(unlockButton)
+
+    passwordField.on("change", function(value)
+      unlockButton.setDisabled((not value) or #value < 1)
+    end)
+
+    passwordField.on("enter", tryPassword)
+    unlockButton.on("press", tryPassword)
+  else
+    unlockButton = UI.button.create(17, h - 2, w - 16, 3, "Unlock ->")
+    unlockButton.backgroundColor = colors.blue
+    unlockButton.textColor = colors.white
+    unlockButton.activeBackgroundColor = colors.cyan
+    unlockButton.activeTextColor = colors.white
+    unlockButton.on("press", login)
+    screen.addView(unlockButton)
+  end
 end)
 
 screen.addView(list)

@@ -69,7 +69,7 @@ function button.create(x, y, w, h, text)
       end
     end
 
-    local writeX = self.x + math.floor((self.w - string.len(self.text)) / 2) - 1
+    local writeX = self.x + math.floor((self.w - string.len(self.text)) / 2)
     local writeY = self.y + math.floor((self.h - 1) / 2)
     window.setCursorPos(writeX, writeY)
     window.write(self.text)
