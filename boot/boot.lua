@@ -46,7 +46,7 @@ local function openBootManager(settings)
         selected = selected - 1
       end
     elseif key == keys.down then
-      if selected > #settings.profiles + 3 then
+      if y[selected + 1] then
         term.setCursorPos(1, selected)
         term.write("  ")
         selected = selected + 1
