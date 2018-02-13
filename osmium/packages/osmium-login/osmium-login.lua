@@ -17,7 +17,8 @@ end
 
 local eventLoop = opm.require("iron-event-loop").create()
 local w, h = term.getSize()
-local termWindow = window.create(term.current(), 1, 1, w, h, true)
+local currentTerm = term.current()
+local termWindow = window.create(currentTerm, 1, 1, w, h, true)
 local screen = opm.require("iron-screen").create(termWindow)
 
 local userlist = users.getUsers()
@@ -39,6 +40,8 @@ local unlockButton = nil
 
 local function login()
   os.run(getfenv(), opm.resolve("osmium-env"), selectedUser)
+  term.redirect(currentTerm)
+  --sleep(1)
   screen.forceDraw()
 end
 
