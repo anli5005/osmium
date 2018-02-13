@@ -1,17 +1,35 @@
-function create(osmium, user)
-  local self = {osmium = osmium, user = user}
+function create(osmium, user, permissions, options)
+  local self = {osmium = osmium, user = user, permissions = permissions or {}, options = options or {}}
   self.osmium.user = user
 
   function self.canAccess(file, mode)
     return true
   end
 
-  function self.osmium.canReadFile(file)
-    return self.canAccess(file, "r")
+  if self.osmium then
+    function self.osmium.canReadFile(file)
+      local allowed, permission = self.canAccess(file, "r")
+      return allowed, permission
+    end
+
+    function self.osmium.canWriteFile(file)
+      local allowed, permission = self.canAccess(file, "w")
+      return allowed, permission
+    end
   end
 
-  function self.osmium.canWriteFile(file)
-    return self.canAccess(file, "w")
+  if self.options.requestPermission then
+    function self.osmium.requestPermission(permission)
+      return self.options.requestPermission(permission)
+    end
+  end
+
+  function self.tryAccessing(file, mode)
+    local allowed, permission = self.canAccess(file, mode)
+    if self.options.requestPermission and not allowed then
+      self.options.requestPermission(permission)
+    end
+    return allowed
   end
 
   function self.generateEnv()
@@ -19,6 +37,117 @@ function create(osmium, user)
 
     for k,v in pairs(fs) do
       env.fs[k] = v
+    end
+
+    function env.fs.list(path)
+      if self.tryAccessing(path, "r") then
+        return fs.list(path)
+      else
+        return {}
+      end
+    end
+
+    function env.fs.exists(path)
+      if self.tryAccessing(fs.getDir(path), "r") then
+        return fs.exists(path)
+      else
+        return false
+      end
+    end
+
+    function env.fs.isDir(path)
+      if self.tryAccessing(fs.getDir(path), "r") then
+        return fs.isDir(path)
+      else
+        return false
+      end
+    end
+
+    function env.fs.isReadOnly(path)
+      if self.tryAccessing(path, "w") then
+        return fs.isReadOnly(path)
+      else
+        return true
+      end
+    end
+
+    function env.fs.getDrive(path)
+      if self.tryAccessing(fs.getDir(path), "r") then
+        return fs.getDrive(path)
+      else
+        return nil
+      end
+    end
+
+    function env.fs.getSize(path)
+      if self.tryAccessing(path, "r") then
+        return fs.isDir(path)
+      else
+        return 0
+      end
+    end
+
+    function env.fs.getFreeSpace(path)
+      if self.tryAccessing(fs.getDir(path), "r") then
+        return fs.getFreeSpace(path)
+      else
+        return nil
+      end
+    end
+
+    function env.fs.makeDir(path)
+      if self.tryAccessing(path, "w") then
+        return fs.makeDir(path)
+      end
+    end
+
+    function env.fs.move(from, to)
+      if self.tryAccessing(from, "r") and self.tryAccessing(from, "w") and self.tryAccessing(to, "w") then
+        return fs.move(from, to)
+      end
+    end
+
+    function env.fs.copy(from, to)
+      if self.tryAccessing(from, "r") and self.tryAccessing(to, "w") then
+        return fs.copy(from, to)
+      end
+    end
+
+    function env.fs.delete(path)
+      if self.tryAccessing(path, "w") then
+        return fs.delete(path)
+      end
+    end
+
+    function env.fs.open(path, filemode)
+      local mode = "w"
+      if filemode == "r" or filemode == "rb" then
+        mode = "r"
+      end
+      if self.tryAccessing(path, mode) then
+        return fs.open(path, mode)
+      else
+        return nil
+      end
+    end
+
+    function env.fs.find(path)
+      local files = fs.find(path)
+      local result = {}
+      for _,file in ipairs(files) do
+        if self.canAccess(file, "r") then
+          table.insert(result, file)
+        end
+      end
+      return result
+    end
+
+    function env.fs.complete(partial, path, files, slashes)
+      if self.tryAccessing(path, "r") then
+        return fs.complete(partial, path, files, slashes)
+      else
+        return {}
+      end
     end
 
     env.loadfile = function( _sFile, _tEnv )
