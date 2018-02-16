@@ -9,7 +9,7 @@ if not fs.exists("/osmium/settings/users.lson") then
   osmium.log("[info] Running osmium-setup...")
 
   local setupResult = opm.require("osmium-setup").setupOsmium()
-  setupID = users.insertUser({username = setupResult.username, home = fs.combine("/home", setupResult.username)})
+  setupID = users.insertUser({username = setupResult.username, admin = true})
   if setupResult.password then
     users.setPassword(setupID, setupResult.password)
   end
@@ -41,7 +41,7 @@ local unlockButton = nil
 local function login()
   os.run(getfenv(), opm.resolve("osmium-env"), selectedUser)
   term.redirect(currentTerm)
-  --sleep(1)
+  sleep(1)
   screen.forceDraw()
 end
 

@@ -3,6 +3,29 @@ function create(osmium, user, permissions, options)
   self.osmium.user = user
 
   function self.canAccess(file, mode)
+    -- Remove slashes if there are any.
+    local path = {}
+    for component in string.gmatch(file, "[^/]+") do
+      table.insert(path, component)
+    end
+
+    if not self.permissions.otherUsers then
+      if path[1] == "home" then
+        if mode == "w" and not path[2] then
+          return false, "otherUsers"
+        end
+        if path[2] ~= self.user.username then
+          return false, "otherUsers"
+        end
+      end
+    end
+
+    if mode == "w" and not self.permissions.editSystem then
+      if path[1] == "osmium" or path[1] == "boot" or path[1] == "startup" or path[1] == "startup.lua" then
+        return false, "editSystem"
+      end
+    end
+
     return true
   end
 
@@ -20,7 +43,7 @@ function create(osmium, user, permissions, options)
 
   if self.options.requestPermission then
     function self.osmium.requestPermission(permission)
-      return self.options.requestPermission(permission)
+      return not not self.options.requestPermission(permission)
     end
   end
 
@@ -33,7 +56,7 @@ function create(osmium, user, permissions, options)
   end
 
   function self.generateEnv()
-    local env = {osmium = self.osmium, os = {}, fs = {}, term = term}
+    local env = {osmium = self.osmium, os = {}, fs = {}}
 
     for k,v in pairs(fs) do
       env.fs[k] = v

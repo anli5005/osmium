@@ -23,17 +23,35 @@ local barThread = nil
 local unexpected = true
 
 local function createThread(fn, win)
-  local thread = {coroutine = coroutine.create(fn), window = win or window.create(currentTerm, 1, 1, w, h - 1, false)}
+  local thread = {coroutine = coroutine.create(fn), window = win or window.create(currentTerm, 1, 1, w, h - 1, false), interacted = false}
   table.insert(threads, thread)
   term.redirect(thread.window)
   thread.success, thread.filter = coroutine.resume(thread.coroutine)
   thread.status = coroutine.status(thread.coroutine)
-  return index, thread
+  return #threads, thread
+end
+
+local function switchTo(index)
+  if visibleThread and visibleThread ~= index then
+    threads[visibleThread].window.setVisible(false)
+  end
+  visibleThread = index
+  threads[index].window.setVisible(true)
+  threads[index].window.redraw()
+  if focus == 1 then
+    focus = 0
+  end
 end
 
 local function removeThread(index)
   if visibleThread == index then
     visibleThread = nil
+    for i,t in pairs(threads) do
+      if i ~= index and t and t.status ~= "dead" and barThread ~= i then
+        switchTo(i)
+        break
+      end
+    end
   end
   if barThread == index then
     barThread = nil
@@ -41,32 +59,22 @@ local function removeThread(index)
   threads[index] = nil
 end
 
-local function switchTo(index)
-  if visibleThread then
-    threads[visibleThread].window.setVisible(false)
-  end
-  visibleThread = index
-  threads[visibleThread].window.setVisible(true)
-  if focus == 1 then
-    focus = 0
-  end
-end
-
 eventLoop.all(function(event, ...)
   if event ~= "mouse_click" and event ~= "mouse_up" and event ~= "mouse_scroll" and event ~= "mouse_drag" and event ~= "char" and event ~= "key" and event ~= "paste" and event ~= "key_up" then
     local toRemove = {}
-    for i,t in ipairs(threads) do
+    for i,t in pairs(threads) do
       if t and (t.filter == event or not t.filter) then
         term.redirect(t.window)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
         t.status = coroutine.status(t.coroutine)
+        t.interacted = true
         if t.status == "dead" then
-          toRemove[i] = true
+          table.insert(toRemove, i)
         end
       end
     end
-    for k,b in ipairs(toRemove) do
-      --removeThread(k)
+    for _,i in ipairs(toRemove) do
+      removeThread(i)
     end
   elseif event == "mouse_click" then
     local y = arg[3]
@@ -77,6 +85,7 @@ eventLoop.all(function(event, ...)
         term.redirect(t.window)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
         t.status = coroutine.status(t.coroutine)
+        t.interacted = true
         if t.status == "dead" then
           removeThread(visibleThread)
         end
@@ -89,6 +98,7 @@ eventLoop.all(function(event, ...)
       resumeArgs[3] = 1
       t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
       t.status = coroutine.status(t.coroutine)
+      t.interacted = true
       if t.status == "dead" then
         removeThread(barThread)
       end
@@ -103,6 +113,7 @@ eventLoop.all(function(event, ...)
         term.redirect(t.window)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
         t.status = coroutine.status(t.coroutine)
+        t.interacted = true
         if t.status == "dead" then
           removeThread(visibleThread)
         end
@@ -114,6 +125,7 @@ eventLoop.all(function(event, ...)
       resumeArgs[3] = 1
       t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
       t.status = coroutine.status(t.coroutine)
+      t.interacted = true
       if t.status == "dead" then
         removeThread(barThread)
       end
@@ -125,6 +137,7 @@ eventLoop.all(function(event, ...)
         term.redirect(t.window)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
         t.status = coroutine.status(t.coroutine)
+        t.interacted = true
         if t.status == "dead" then
           removeThread(visibleThread)
         end
@@ -135,6 +148,7 @@ eventLoop.all(function(event, ...)
         term.redirect(t.window)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
         t.status = coroutine.status(t.coroutine)
+        t.interacted = true
         if t.status == "dead" then
           removeThread(barThread)
         end
@@ -156,37 +170,29 @@ eventLoop.all(function(event, ...)
 end)
 
 barThread = createThread(function()
-  local ok, err = pcall(function()
-    term.setBackgroundColor(colors.black)
-    term.setTextColor(colors.white)
-    term.setCursorPos(1,1)
-    sleep(1)
-    local sandbox = OsmiumSandbox.create({}, user)
-    sandbox.run(opm.resolve("osmium-bar"))
-  end)
-  if err then
-    term.setCursorPos(1,1)
-    term.setBackgroundColor(colors.white)
-    term.setTextColor(colors.red)
-    term.write(err)
-  end
+  local sandbox = OsmiumSandbox.create({}, user)
+  sandbox.run(opm.resolve("osmium-bar"))
 end, window.create(currentTerm, 1, h, w, 1, true))
 
-createThread(function()
+local i, thread1 = createThread(function()
   switchTo(2)
   sleep(1)
   print("Hello!")
+  sleep(0.5)
 end)
 
-createThread(function()
+local i, thread2 = createThread(function()
   sleep(2)
-  switchTo(3)
+  --switchTo(3)
   print("Hi!")
+  sleep(0.5)
 end)
 
 createThread(function()
   sleep(3)
-  switchTo(4)
+  --switchTo(4)
+  print("bye")
+  print(textutils)
   textutils.slowPrint("Goodbye!")
   sleep(1)
   unexpected = false
