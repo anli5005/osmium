@@ -174,11 +174,29 @@ barThread = createThread(function()
   sandbox.run(opm.resolve("osmium-bar"))
 end, window.create(currentTerm, 1, h, w, 1, true))
 
-local i, thread1 = createThread(function()
+local function run(path, ...)
+  local s = opm.require("minimal-shell").shell
+  s.run(path, ...)
+end
+
+local homeThread = createThread(function()
   switchTo(2)
-  sleep(1)
-  print("Hello!")
-  sleep(0.5)
+
+  local ok, err = pcall(function()
+    local sandbox = OsmiumSandbox.create({}, user, {}, {})
+    sandbox.run("/rom/programs/shell.lua")
+  end)
+  if not ok then
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.red)
+    local w, h = term.getSize()
+    if h < 3 then
+      term.write(err)
+    else
+      print(err)
+    end
+  end
+  sleep(10)
 end)
 
 local i, thread2 = createThread(function()
@@ -195,8 +213,6 @@ createThread(function()
   print(textutils)
   textutils.slowPrint("Goodbye!")
   sleep(1)
-  unexpected = false
-  eventLoop.stop()
 end)
 
 eventLoop.run()

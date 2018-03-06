@@ -1,6 +1,7 @@
 function create(osmium, user, permissions, options)
   local self = {osmium = osmium, user = user, permissions = permissions or {}, options = options or {}}
   self.osmium.user = user
+  self.user = user
 
   function self.canAccess(file, mode)
     -- Remove slashes if there are any.
@@ -14,7 +15,7 @@ function create(osmium, user, permissions, options)
         if mode == "w" and not path[2] then
           return false, "otherUsers"
         end
-        if path[2] ~= self.user.username then
+        if path[2] and path[2] ~= self.user.username and path[2] ~= "" then
           return false, "otherUsers"
         end
       end
@@ -56,7 +57,8 @@ function create(osmium, user, permissions, options)
   end
 
   function self.generateEnv()
-    local env = {osmium = self.osmium, os = {}, fs = {}}
+    local env = {osmium = self.osmium, os = {}, fs = {}, term = term}
+    setmetatable(env, {__index = _G})
 
     for k,v in pairs(fs) do
       env.fs[k] = v
@@ -214,9 +216,10 @@ function create(osmium, user, permissions, options)
       end
       local tArgs = table.pack( ... )
       local tEnv = _tEnv
-      setmetatable( tEnv, { __index = _G } )
+      setmetatable( tEnv, { __index = env } )
       local fnFile, err = loadfile( _sPath, tEnv )
       if fnFile then
+        setfenv(fnFile, tEnv)
         local ok, err = pcall( function()
           fnFile( table.unpack( tArgs, 1, tArgs.n ) )
         end )
@@ -250,9 +253,10 @@ function create(osmium, user, permissions, options)
       tAPIsLoading[sName] = true
 
       local tEnv = {}
-      setmetatable( tEnv, { __index = _G } )
+      setmetatable( tEnv, { __index = env } )
       local fnAPI, err = loadfile( _sPath, tEnv )
       if fnAPI then
+        setfenv(fnAPI, tEnv)
         local ok, err = pcall( fnAPI )
         if not ok then
           printError( err )
@@ -292,27 +296,30 @@ function create(osmium, user, permissions, options)
         local sPath = fs.combine( "rom/apis", sFile )
         if not fs.isDir( sPath ) then
           local name = fs.getName(sPath)
-          if name:sub(-4) == ".lua" then
-            name = name:sub(1, -5)
-          end
-          local tEnv = {}
-          setmetatable(tEnv, {__index = env})
+          if name ~= "term" and name ~= "term.lua" and name ~= "fs" and name ~= "fs.lua" then
+            if name:sub(-4) == ".lua" then
+              name = name:sub(1, -5)
+            end
+            local tEnv = {}
+            setmetatable(tEnv, {__index = env})
 
-          local fnAPI, err = loadfile(sPath, tEnv)
-          if fnAPI then
-            local ok, err = pcall(fnAPI)
-            if not ok then
-              printError(err)
-            else
-              env[name] = {}
-              for k,v in pairs(tEnv) do
-                if k ~= "_ENV" then
-                  env[name][k] = v
+            local fnAPI, err = loadfile(sPath, tEnv)
+            if fnAPI then
+              setfenv(fnAPI, tEnv)
+              local ok, err = pcall(fnAPI)
+              if not ok then
+                printError(err)
+              else
+                env[name] = {}
+                for k,v in pairs(tEnv) do
+                  if k ~= "_ENV" then
+                    env[name][k] = v
+                  end
                 end
               end
+            else
+              printError(err)
             end
-          else
-            printError(err)
           end
         end
       end
@@ -330,15 +337,18 @@ function create(osmium, user, permissions, options)
     end
     env.opm = o
 
-    setmetatable(env, {__index = _G})
+    env.shell = env.opm.require("minimal-shell").shell
+    env.shell.setDir(fs.combine("home", self.user.username))
+
     return env
   end
 
   function self.run(path, ...)
     local env = self.generateEnv()
-    local fn, err = env.loadfile(path, env)
+    local fn, err = env.loadfile(path)
     local ok
     if fn then
+      setfenv(fn, env)
       ok, err = pcall(function()
         fn(unpack(arg))
       end)
