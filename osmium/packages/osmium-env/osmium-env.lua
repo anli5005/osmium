@@ -181,6 +181,7 @@ end
 
 local homeThread = createThread(function()
   switchTo(2)
+  focus = 1
 
   local ok, err = pcall(function()
     local sandbox = OsmiumSandbox.create({}, user, {}, {})
