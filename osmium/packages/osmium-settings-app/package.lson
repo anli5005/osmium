@@ -1,0 +1,7 @@
+{
+  name = "osmium-settings-app",
+  osmium = {
+    name = "Settings",
+    app = true
+  }
+}

@@ -39,9 +39,11 @@ local passwordField = nil
 local unlockButton = nil
 
 local function login()
+  if not fs.exists(fs.combine("/home", userlist[selectedUser].username)) then
+    fs.makeDir(fs.combine("/home", userlist[selectedUser].username))
+  end
   os.run(getfenv(), opm.resolve("osmium-env"), selectedUser)
   term.redirect(currentTerm)
-  sleep(1)
   screen.forceDraw()
 end
 

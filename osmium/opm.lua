@@ -49,7 +49,7 @@ function resolve(name)
     end
     path = nil
   end
-  
+
   return path
 end
 
@@ -69,5 +69,26 @@ function require(name)
     end
 
     return package
+  end
+end
+
+function resolveInfo(name)
+  for i,d in ipairs(directories) do
+    local path = fs.combine(d, name)
+    if fs.exists(path) and fs.isDir(path) then
+      local metaPath = fs.combine(path, "package.lson")
+      if fs.exists(metaPath) then
+        return fs.combine(path, "package.lson")
+      end
+    end
+  end
+end
+
+local lson = require("lson") or require("osmium-lson")
+
+function getInfo(name)
+  local path = resolveInfo(name)
+  if path then
+    return lson.read(path)
   end
 end

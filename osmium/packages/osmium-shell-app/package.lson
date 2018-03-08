@@ -1,0 +1,7 @@
+{
+  name = "osmium-shell-app",
+  osmium = {
+    name = "Shell",
+    app = true
+  }
+}
