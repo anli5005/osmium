@@ -4,6 +4,7 @@ term.clear()
 
 local args = {...}
 
+local AppRegistry = opm.require("osmium-app-registry")
 local IronEventLoop = opm.require("iron-event-loop")
 local OsmiumSandbox = opm.require("osmium-sandbox")
 local eventLoop = IronEventLoop.create()
@@ -11,6 +12,12 @@ local eventLoop = IronEventLoop.create()
 local users = opm.require("osmium-users")
 local user = users.getUser(args[1])
 user.id = args[1]
+
+local appNames = {}
+AppRegistry.readSystem()
+for i,a in ipairs(AppRegistry.registry) do
+  appNames[a.exec] = a.name
+end
 
 local currentTerm = term.current()
 local w, h = term.getSize()
@@ -57,10 +64,11 @@ local function removeThread(index)
     barThread = nil
   end
   threads[index] = nil
+  eventLoop.emit("osmium:barupdate")
 end
 
 eventLoop.all(function(event, ...)
-  if event ~= "mouse_click" and event ~= "mouse_up" and event ~= "mouse_scroll" and event ~= "mouse_drag" and event ~= "char" and event ~= "key" and event ~= "paste" and event ~= "key_up" then
+  if event ~= "mouse_click" and event ~= "mouse_up" and event ~= "mouse_scroll" and event ~= "mouse_drag" and event ~= "char" and event ~= "key" and event ~= "paste" and event ~= "key_up" and event ~= "osmium:barupdate" then
     local toRemove = {}
     for i,t in pairs(threads) do
       if t and (t.filter == event or not t.filter) then
@@ -82,25 +90,29 @@ eventLoop.all(function(event, ...)
       if visibleThread then
         focus = 1
         local t = threads[visibleThread]
-        term.redirect(t.window)
-        t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
-        t.status = coroutine.status(t.coroutine)
-        t.interacted = true
-        if t.status == "dead" then
-          removeThread(visibleThread)
+        if t.filter == event or not t.filter then
+          term.redirect(t.window)
+          t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
+          t.status = coroutine.status(t.coroutine)
+          t.interacted = true
+          if t.status == "dead" then
+            removeThread(visibleThread)
+          end
         end
       end
     elseif barThread then
       focus = 2
       local t = threads[barThread]
-      term.redirect(t.window)
-      local resumeArgs = arg
-      resumeArgs[3] = 1
-      t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
-      t.status = coroutine.status(t.coroutine)
-      t.interacted = true
-      if t.status == "dead" then
-        removeThread(barThread)
+      if t.filter == event or not t.filter then
+        term.redirect(t.window)
+        local resumeArgs = arg
+        resumeArgs[3] = 1
+        t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
+        t.status = coroutine.status(t.coroutine)
+        t.interacted = true
+        if t.status == "dead" then
+          removeThread(barThread)
+        end
       end
     else
       focus = 0
@@ -110,43 +122,68 @@ eventLoop.all(function(event, ...)
     if y < h then
       if visibleThread then
         local t = threads[visibleThread]
-        term.redirect(t.window)
-        t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
-        t.status = coroutine.status(t.coroutine)
-        t.interacted = true
-        if t.status == "dead" then
-          removeThread(visibleThread)
+        if t.filter == event or not t.filter then
+          term.redirect(t.window)
+          t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
+          t.status = coroutine.status(t.coroutine)
+          t.interacted = true
+          if t.status == "dead" then
+            removeThread(visibleThread)
+          end
         end
       end
     elseif barThread then
       local t = threads[barThread]
-      term.redirect(t.window)
-      local resumeArgs = arg
-      resumeArgs[3] = 1
-      t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
-      t.status = coroutine.status(t.coroutine)
-      t.interacted = true
-      if t.status == "dead" then
-        removeThread(barThread)
+      if t.filter == event or not t.filter then
+        term.redirect(t.window)
+        local resumeArgs = arg
+        resumeArgs[3] = 1
+        t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
+        t.status = coroutine.status(t.coroutine)
+        t.interacted = true
+        if t.status == "dead" then
+          removeThread(barThread)
+        end
       end
     end
   elseif event == "key" or event == "char" or event == "key_up" or event == "paste" then
     if focus == 1 then
       if visibleThread then
         local t = threads[visibleThread]
-        term.redirect(t.window)
-        t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
-        t.status = coroutine.status(t.coroutine)
-        t.interacted = true
-        if t.status == "dead" then
-          removeThread(visibleThread)
+        if t.filter == event or not t.filter then
+          term.redirect(t.window)
+          t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
+          t.status = coroutine.status(t.coroutine)
+          t.interacted = true
+          if t.status == "dead" then
+            removeThread(visibleThread)
+          end
         end
       end
     elseif focus == 2 then
       if barThread then
         local t = threads[barThread]
+        if t.filter == event or not t.filter then
+          term.redirect(t.window)
+          local resumeArgs = arg
+          resumeArgs[3] = 1
+          t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
+          t.status = coroutine.status(t.coroutine)
+          t.interacted = true
+          if t.status == "dead" then
+            removeThread(barThread)
+          end
+        end
+      end
+    end
+  elseif event == "osmium:barupdate" then
+    if barThread then
+      local t = threads[barThread]
+      if t and (t.filter == event or not t.filter) then
+        local c = term.current()
         term.redirect(t.window)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
+        term.redirect(c)
         t.status = coroutine.status(t.coroutine)
         t.interacted = true
         if t.status == "dead" then
@@ -169,51 +206,66 @@ eventLoop.all(function(event, ...)
   end
 end)
 
+local osmiumAPI = {}
+
+local function run(path, ...)
+  local permissions = {}
+  if user.admin then
+    permissions.editSystem = true
+    permissions.otherUsers = true
+  end
+  local sandbox = OsmiumSandbox.create(osmiumAPI, user, permissions, {})
+  sandbox.run(path, ...)
+end
+
+function osmiumAPI.run(...)
+  local args = arg
+  local i = createThread(function()
+    run(unpack(args))
+  end)
+  local path = args[1]
+  if path:sub(1,1) == "/" then
+    path = path:sub(2)
+  end
+  if threads[i] and appNames[path] then
+    threads[i].name = appNames[path]
+  end
+  eventLoop.emit("osmium:barupdate")
+  return i
+end
+
+function osmiumAPI.switchTo(thread)
+  if thread ~= barThread then
+    switchTo(thread)
+    eventLoop.emit("osmium:barupdate")
+  end
+end
+
+local homeThread
+function osmiumAPI.getHomeID()
+  return homeThread
+end
+
+function osmiumAPI.signOut()
+  eventLoop.stop()
+  unexpected = false
+end
+
 barThread = createThread(function()
-  local sandbox = OsmiumSandbox.create({}, user)
+  local sandbox = OsmiumSandbox.create({
+    switchTo = switchTo,
+    getHomeID = osmiumAPI.getHomeID,
+    getVisibleThread = function()
+      return visibleThread
+    end
+  }, user, permissions, {})
   sandbox.run(opm.resolve("osmium-bar"))
 end, window.create(currentTerm, 1, h, w, 1, true))
 
-local function run(path, ...)
-  local s = opm.require("minimal-shell").shell
-  s.run(path, ...)
-end
-
-local homeThread = createThread(function()
-  switchTo(2)
+homeThread = createThread(function()
   focus = 1
-
-  local ok, err = pcall(function()
-    local sandbox = OsmiumSandbox.create({}, user, {}, {})
-    sandbox.run("/rom/programs/shell.lua")
-  end)
-  if not ok then
-    term.setBackgroundColor(colors.black)
-    term.setTextColor(colors.red)
-    local w, h = term.getSize()
-    if h < 3 then
-      term.write(err)
-    else
-      print(err)
-    end
-  end
-  sleep(10)
-end)
-
-local i, thread2 = createThread(function()
-  sleep(2)
-  --switchTo(3)
-  print("Hi!")
-  sleep(0.5)
-end)
-
-createThread(function()
-  sleep(3)
-  --switchTo(4)
-  print("bye")
-  print(textutils)
-  textutils.slowPrint("Goodbye!")
-  sleep(1)
+  switchTo(2)
+  run(opm.resolve("osmium-home"))
 end)
 
 eventLoop.run()

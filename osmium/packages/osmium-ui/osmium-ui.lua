@@ -80,6 +80,7 @@ function button.create(x, y, w, h, text)
       self.isActive = true
       self.redraw()
     end
+    return true
   end
 
   function self.mouseUp(event)
@@ -418,8 +419,8 @@ function list.create(x, y, w, h, rows, row)
     self.redraw()
   end
 
-  function self.addRow(row, index)
-    table.insert(self._rows, row, index)
+  function self.addRow(row)
+    table.insert(self._rows, row)
     self.update()
   end
 

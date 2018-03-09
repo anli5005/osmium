@@ -1,0 +1,7 @@
+{
+  name = "osmium-worm-app",
+  osmium = {
+    name = "Worm",
+    app = true
+  }
+}

@@ -217,7 +217,7 @@ function create(osmium, user, permissions, options)
       local tArgs = table.pack( ... )
       local tEnv = _tEnv
       setmetatable( tEnv, { __index = env } )
-      local fnFile, err = loadfile( _sPath, tEnv )
+      local fnFile, err = env.loadfile( _sPath, tEnv )
       if fnFile then
         setfenv(fnFile, tEnv)
         local ok, err = pcall( function()
@@ -325,8 +325,11 @@ function create(osmium, user, permissions, options)
       end
     end
 
+    local result = {_G = env, _ENV = env}
+    setmetatable(result, {__index = env})
+
     local opmenv = {}
-    setmetatable(opmenv, {__index = env})
+    setmetatable(opmenv, {__index = result})
     os.run(opmenv, "/osmium/opm.lua")
 
     local o = {}
@@ -337,15 +340,19 @@ function create(osmium, user, permissions, options)
     end
     env.opm = o
 
-    env.shell = env.opm.require("minimal-shell").shell
-    env.shell.setDir(fs.combine("home", self.user.username))
+    local shellenv = {}
+    setmetatable(shellenv, {__index = result})
+    env.os.run(shellenv, env.opm.resolve("minimal-shell"))
+    result.shell = shellenv.shell
 
-    return env
+    result.shell.setDir(fs.combine("home", self.user.username))
+
+    return result
   end
 
   function self.run(path, ...)
     local env = self.generateEnv()
-    local fn, err = env.loadfile(path)
+    local fn, err = env.loadfile(path, env)
     local ok
     if fn then
       setfenv(fn, env)

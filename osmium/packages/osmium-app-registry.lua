@@ -5,7 +5,7 @@ registry = {}
 function read(path)
   local file = lson.read(path)
   if file then
-    for k,v in pairs(file) do
+    for k,v in ipairs(file) do
       registry[k] = v
     end
   end
@@ -73,7 +73,7 @@ function addPackage(package)
   if info and info.osmium and info.osmium.name then
     name = info.osmium.name
   end
-  addApp({package = package, name = name})
+  addApp({package = package, name = name, exec = opm.resolve(package)})
 end
 
 function checkAppsFolder()
@@ -91,7 +91,7 @@ function checkAppsFolder()
     if not index[package] then
       local meta = opm.getInfo(package)
       if meta and meta.osmium and meta.osmium.app then
-        addApp({package = package, name = meta.osmium.name})
+        addApp({package = package, name = meta.osmium.name, exec = opm.resolve(package)})
         index[package] = true
       end
     end

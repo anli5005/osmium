@@ -44,6 +44,7 @@ local function login()
   end
   os.run(getfenv(), opm.resolve("osmium-env"), selectedUser)
   term.redirect(currentTerm)
+  --sleep(10)
   screen.forceDraw()
 end
 

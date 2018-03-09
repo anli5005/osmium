@@ -1,7 +1,7 @@
 colors = {
   [colors.white] = {
     name = "Bright White",
-    colors = {colors.black, colors.darkGray, colors.lightGray}
+    colors = {colors.black, colors.gray, colors.lightGray}
   },
   [colors.orange] = {
     name = "Tangy Orange",
@@ -33,7 +33,7 @@ colors = {
   },
   [colors.lightGray] = {
     name = "Shiny Silver",
-    colors = {colors.black, colors.darkGray, colors.white}
+    colors = {colors.black, colors.gray, colors.white}
   },
   [colors.cyan] = {
     name = "Cool Cyan",
@@ -61,6 +61,6 @@ colors = {
   },
   [colors.black] = {
     name = "Charcoal Black",
-    colors = {colors.white, colors.darkGray, colors.lightGray}
+    colors = {colors.white, colors.lightGray, colors.gray}
   }
 }
