@@ -40,12 +40,17 @@ function view.draw(window)
 end
 function view.click(event)
   if event.button == 1 then
-    local x = event.x - view.x + 1
+    local x = event.x + 1 - view.x
     if buffer[x] and buffer[x].id then
-      osmium.switchTo(buffer[x].id)
+      if buffer[x].close then
+        osmium.close(buffer[x].id)
+      else
+        osmium.switchTo(buffer[x].id)
+      end
       eventLoop.emit("osmium:barupdate")
     end
   end
+  return true
 end
 screen.addView(view)
 
@@ -71,14 +76,16 @@ function updateBuffer()
     if t.id == visible then
       bkg = txt
       txt = color
-    end
-    buffer[k] = {text = " ", textColor = txt, color = bkg, id = t.id}
-    k = k + 1
-    for j = 1,#t.name do
-      buffer[k] = {text = t.name:sub(j, j), textColor = txt, color = bkg, id = t.id}
+      buffer[k] = {text = "X", textColor = colors.white, color = colors.red, id = t.id, close = true}
       k = k + 1
     end
-    buffer[k] = {text = " ", textColor = txt, color = bkg, id = t.id}
+    buffer[k] = {text = " ", textColor = txt, color = bkg, id = t.id, close = false}
+    k = k + 1
+    for j = 1,#t.name do
+      buffer[k] = {text = t.name:sub(j, j), textColor = txt, color = bkg, id = t.id, close = false}
+      k = k + 1
+    end
+    buffer[k] = {text = " ", textColor = txt, color = bkg, id = t.id, close = false}
     k = k + 1
   end
 end

@@ -260,7 +260,8 @@ barThread = createThread(function()
     end,
     getThreads = function()
       return threads
-    end
+    end,
+    close = removeThread
   }, user, permissions, {})
   sandbox.run(opm.resolve("osmium-bar"))
 end, window.create(currentTerm, 1, h, w, 1, true))
