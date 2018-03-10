@@ -257,6 +257,9 @@ barThread = createThread(function()
     getHomeID = osmiumAPI.getHomeID,
     getVisibleThread = function()
       return visibleThread
+    end,
+    getThreads = function()
+      return threads
     end
   }, user, permissions, {})
   sandbox.run(opm.resolve("osmium-bar"))

@@ -1,0 +1,7 @@
+{
+  name = "osmium-redirection-app",
+  osmium = {
+    name = "Redirection",
+    app = true
+  }
+}

@@ -4,7 +4,7 @@ local IronScreen = opm.require("iron-screen")
 local OsmiumColors = opm.require("osmium-colors").colors
 local UI = opm.require("osmium-ui")
 
-local color = colors.green
+local color = colors.blue
 local signOutColor = colors.red
 
 local loop = IronEventLoop.create()
