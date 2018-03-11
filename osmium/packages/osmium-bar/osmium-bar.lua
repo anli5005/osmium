@@ -61,7 +61,7 @@ function updateThreads()
   local t = osmium.getThreads()
   for k,v in pairs(t) do
     if k > 2 then
-      table.insert(threads, {name = v.name or "process", id = k})
+      table.insert(threads, {name = v.name or "process", description = v.description, id = k, isApp = v.isApp})
     end
   end
 end
@@ -81,8 +81,12 @@ function updateBuffer()
     end
     buffer[k] = {text = " ", textColor = txt, color = bkg, id = t.id, close = false}
     k = k + 1
-    for j = 1,#t.name do
-      buffer[k] = {text = t.name:sub(j, j), textColor = txt, color = bkg, id = t.id, close = false}
+    local name = t.name
+    if t.description and not t.isApp then
+      name = t.description
+    end
+    for j = 1,#name do
+      buffer[k] = {text = name:sub(j, j), textColor = txt, color = bkg, id = t.id, close = false}
       k = k + 1
     end
     buffer[k] = {text = " ", textColor = txt, color = bkg, id = t.id, close = false}

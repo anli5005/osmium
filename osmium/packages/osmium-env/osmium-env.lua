@@ -26,15 +26,18 @@ local threads = {}
 local visibleThread = nil
 local focus = 0
 local barThread = nil
+local runningThread = nil
 
 local unexpected = true
 
 local function createThread(fn, win)
   local thread = {coroutine = coroutine.create(fn), window = win or window.create(currentTerm, 1, 1, w, h - 1, false), interacted = false}
   table.insert(threads, thread)
+  local curr = term.current()
   term.redirect(thread.window)
   thread.success, thread.filter = coroutine.resume(thread.coroutine)
   thread.status = coroutine.status(thread.coroutine)
+  term.redirect(curr)
   return #threads, thread
 end
 
@@ -72,6 +75,7 @@ eventLoop.all(function(event, ...)
     local toRemove = {}
     for i,t in pairs(threads) do
       if t and (t.filter == event or not t.filter) then
+        runningThread = i
         term.redirect(t.window)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
         t.status = coroutine.status(t.coroutine)
@@ -91,6 +95,7 @@ eventLoop.all(function(event, ...)
         focus = 1
         local t = threads[visibleThread]
         if t.filter == event or not t.filter then
+          runningThread = visibleThread
           term.redirect(t.window)
           t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
           t.status = coroutine.status(t.coroutine)
@@ -104,6 +109,7 @@ eventLoop.all(function(event, ...)
       focus = 2
       local t = threads[barThread]
       if t.filter == event or not t.filter then
+        runningThread = barThread
         term.redirect(t.window)
         local resumeArgs = arg
         resumeArgs[3] = 1
@@ -123,6 +129,7 @@ eventLoop.all(function(event, ...)
       if visibleThread then
         local t = threads[visibleThread]
         if t.filter == event or not t.filter then
+          runningThread = visibleThread
           term.redirect(t.window)
           t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
           t.status = coroutine.status(t.coroutine)
@@ -135,6 +142,7 @@ eventLoop.all(function(event, ...)
     elseif barThread then
       local t = threads[barThread]
       if t.filter == event or not t.filter then
+        runningThread = barThread
         term.redirect(t.window)
         local resumeArgs = arg
         resumeArgs[3] = 1
@@ -151,6 +159,7 @@ eventLoop.all(function(event, ...)
       if visibleThread then
         local t = threads[visibleThread]
         if t.filter == event or not t.filter then
+          runningThread = visibleThread
           term.redirect(t.window)
           t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
           t.status = coroutine.status(t.coroutine)
@@ -164,6 +173,7 @@ eventLoop.all(function(event, ...)
       if barThread then
         local t = threads[barThread]
         if t.filter == event or not t.filter then
+          runningThread = barThread
           term.redirect(t.window)
           local resumeArgs = arg
           resumeArgs[3] = 1
@@ -208,13 +218,46 @@ end)
 
 local osmiumAPI = {}
 
-local function run(path, ...)
+local function createSandbox()
   local permissions = {}
   if user.admin then
     permissions.editSystem = true
     permissions.otherUsers = true
   end
-  local sandbox = OsmiumSandbox.create(osmiumAPI, user, permissions, {})
+  return OsmiumSandbox.create(osmiumAPI, user, permissions, {
+    multishell = {
+      launch = osmiumAPI.runWithEnv,
+      getCurrent = function()
+        return runningThread
+      end,
+      getCount = function()
+        return #threads
+      end,
+      setFocus = function(thread)
+        if thread ~= barThread and threads[thread] then
+          switchTo(thread)
+        end
+      end,
+      setTitle = function(thread, title)
+        if thread ~= barThread and thread ~= homeThread and threads[thread] then
+          threads[thread].description = title
+          eventLoop.emit("osmium:barupdate")
+        end
+      end,
+      getTitle = function(thread)
+        if thread ~= barThread and threads[thread] then
+          return threads[thread].description
+        end
+      end,
+      getFocus = function(thread)
+        return visibleThread
+      end
+    }
+  })
+end
+
+local function run(path, ...)
+  local sandbox = createSandbox()
   sandbox.run(path, ...)
 end
 
@@ -227,8 +270,37 @@ function osmiumAPI.run(...)
   if path:sub(1,1) == "/" then
     path = path:sub(2)
   end
-  if threads[i] and appNames[path] then
-    threads[i].name = appNames[path]
+  if threads[i] then
+    if appNames[path] then
+      threads[i].name = appNames[path]
+      threads[i].isApp = true
+    else
+      threads[i].name = fs.getName(path)
+    end
+  end
+  eventLoop.emit("osmium:barupdate")
+  return i
+end
+
+function osmiumAPI.runWithEnv(tEnv, ...)
+  local args = arg
+  local i = createThread(function()
+    local sandbox = createSandbox()
+    local env = sandbox.generateEnv()
+    setmetatable(tEnv, {__index = env})
+    os.run(tEnv, unpack(args))
+  end)
+  local path = args[1]
+  if path:sub(1,1) == "/" then
+    path = path:sub(2)
+  end
+  if threads[i] then
+    if appNames[path] then
+      threads[i].name = appNames[path]
+      threads[i].isApp = true
+    else
+      threads[i].name = fs.getName(path)
+    end
   end
   eventLoop.emit("osmium:barupdate")
   return i

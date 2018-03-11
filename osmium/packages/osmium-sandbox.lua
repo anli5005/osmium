@@ -57,7 +57,7 @@ function create(osmium, user, permissions, options)
   end
 
   function self.generateEnv()
-    local env = {osmium = self.osmium, os = {}, fs = {}, term = term}
+    local env = {osmium = self.osmium, os = {}, fs = {}, term = term, multishell = options and options.multishell}
     setmetatable(env, {__index = _G})
 
     for k,v in pairs(fs) do
