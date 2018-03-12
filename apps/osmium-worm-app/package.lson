@@ -4,8 +4,10 @@
     name = "Worm",
     app = true,
     home = {
-      backgroundColor = 8192,
-      textColor = 16
+      backgroundColor = 32768,
+      textColor = 1,
+      image = "worm.nft",
+      hideText = true
     }
   }
 }

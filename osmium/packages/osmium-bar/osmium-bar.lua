@@ -4,7 +4,7 @@ local IronView = opm.require("iron-view")
 local OsmiumColors = opm.require("osmium-colors").colors
 local UI = opm.require("osmium-ui")
 
-local color = colors.blue
+local color = colors.orange
 
 local eventLoop = IronEventLoop.create()
 

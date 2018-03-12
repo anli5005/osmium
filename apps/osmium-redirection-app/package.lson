@@ -5,7 +5,8 @@
     app = true,
     home = {
       backgroundColor = 32768,
-      textColor = 16384
+      textColor = 16384,
+      image = "redirection.nft"
     }
   }
 }

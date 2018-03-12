@@ -5,7 +5,9 @@
     app = true,
     home = {
       backgroundColor = 128,
-      textColor = 512
+      textColor = 512,
+      image = "adventure.nft",
+      hideText = true
     }
   }
 }
