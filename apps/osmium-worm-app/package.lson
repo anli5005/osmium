@@ -2,6 +2,10 @@
   name = "osmium-worm-app",
   osmium = {
     name = "Worm",
-    app = true
+    app = true,
+    home = {
+      backgroundColor = 8192,
+      textColor = 16
+    }
   }
 }

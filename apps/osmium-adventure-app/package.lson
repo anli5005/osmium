@@ -2,6 +2,10 @@
   name = "osmium-adventure-app",
   osmium = {
     name = "Adventure",
-    app = true
+    app = true,
+    home = {
+      backgroundColor = 128,
+      textColor = 512
+    }
   }
 }

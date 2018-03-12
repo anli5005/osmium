@@ -121,7 +121,15 @@ function drawImage(image, alpha)
       if color then
         term.setBackgroundColor(color)
         term.setCursorPos(x + j - 1, y + i - 1)
-        if frame.text and frame.fg and frame.text[i][j] and frame.text[i][j] ~= "" and frame.fg[i][j] then
+        if
+          frame.text and
+          frame.fg and
+          frame.text[i] and
+          frame.fg[i] and
+          frame.text[i][j] and
+          frame.text[i][j] ~= "" and
+          frame.fg[i][j]
+        then
           term.setTextColor(frame.fg[i][j])
           term.write(frame.text[i][j]:sub(1,1))
         else
@@ -130,4 +138,28 @@ function drawImage(image, alpha)
       end
     end
   end
+end
+
+function crop(image, width, height)
+  local newImage = {{bg = {}, fg = {}, text = {}}}
+  for k,v in pairs(newImage[1]) do
+    local default = nil
+    if k == "text" then
+      default = ""
+    elseif k == "bg" then
+      default = 0
+    end
+    if image[1][k] then
+      for y = 1,height do
+        local row = {}
+        if image[1][k][y] then
+          for x = 1,width do
+            row[x] = image[1][k][y][x] or default
+          end
+        end
+        table.insert(newImage[1][k], row)
+      end
+    end
+  end
+  return newImage
 end

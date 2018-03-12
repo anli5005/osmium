@@ -92,3 +92,19 @@ function getInfo(name)
     return lson.read(path)
   end
 end
+
+function resolveDir(name)
+  for i,d in ipairs(directories) do
+    local path = fs.combine(d, name)
+    if fs.exists(path) and fs.isDir(path) then
+      return path
+    end
+  end
+end
+
+function resolveFile(name, file)
+  local path = resolveDir(name)
+  if path then
+    return fs.combine(path, file)
+  end
+end

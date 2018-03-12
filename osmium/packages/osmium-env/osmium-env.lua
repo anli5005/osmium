@@ -288,7 +288,7 @@ function osmiumAPI.runWithEnv(tEnv, ...)
     local sandbox = createSandbox()
     local env = sandbox.generateEnv()
     setmetatable(tEnv, {__index = env})
-    os.run(tEnv, unpack(args))
+    env.os.run(tEnv, unpack(args))
   end)
   local path = args[1]
   if path:sub(1,1) == "/" then

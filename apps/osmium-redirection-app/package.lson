@@ -2,6 +2,10 @@
   name = "osmium-redirection-app",
   osmium = {
     name = "Redirection",
-    app = true
+    app = true,
+    home = {
+      backgroundColor = 32768,
+      textColor = 16384
+    }
   }
 }

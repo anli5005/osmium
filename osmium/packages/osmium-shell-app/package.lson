@@ -2,6 +2,12 @@
   name = "osmium-shell-app",
   osmium = {
     name = "Shell",
-    app = true
+    app = true,
+    home = {
+      backgroundColor = 32768,
+      textColor = 16,
+      image = "shell.nft",
+      hideText = true
+    }
   }
 }

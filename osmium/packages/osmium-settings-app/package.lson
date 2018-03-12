@@ -2,6 +2,12 @@
   name = "osmium-settings-app",
   osmium = {
     name = "Settings",
-    app = true
+    app = true,
+    home = {
+      backgroundColor = 128,
+      textColor = 256,
+      hideText = true,
+      image = "settings.nft"
+    }
   }
 }

@@ -1,4 +1,5 @@
 local AppRegistry = opm.require("osmium-app-registry")
+local imageutils = opm.require("imageutils")
 local IronEventLoop = opm.require("iron-event-loop")
 local IronScreen = opm.require("iron-screen")
 local OsmiumColors = opm.require("osmium-colors").colors
@@ -13,13 +14,38 @@ local screen = IronScreen.create(term.current())
 
 local appRow = {height = 3, selectable = false}
 function appRow.drawLine(window, row, num, isSelected, x, y, w, view)
-  window.setBackgroundColor(OsmiumColors[color].colors[1])
-  window.setTextColor(color)
+  local bkg = row.backgroundColor or OsmiumColors[color].colors[1]
   window.setCursorPos(x, y)
-  if num ~= 2 then
-    window.write(string.rep(" ", w))
+  if row.image then
+    imageutils.drawImage({
+      {
+        bg = {row.image[1].bg[num]},
+        fg = row.image[1].fg and {row.image[1].fg[num]},
+        text = row.image[1].text and {row.image[1].text[num]}
+      }
+    }, bkg)
   else
-    window.write(string.rep(" ", 1) .. row.text .. string.rep(" ", math.max(0, w - (1 + string.len(row.text)))))
+    local txt = row.textColor or color
+    window.setBackgroundColor(bkg)
+    window.setTextColor(txt)
+    if row.icon and row.icon.bg and row.icon.bg[num] then
+      local r = row.icon.bg[num]
+      imageutils.drawImage({
+        {
+          bg = {r},
+          fg = row.icon.fg and {row.icon.fg[num]},
+          text = row.icon.text and {row.icon.text[num]}
+        }
+      }, bkg)
+      window.setBackgroundColor(bkg)
+      window.setTextColor(txt)
+      window.setCursorPos(x + #r, y)
+    end
+    if num ~= 2 then
+      window.write(string.rep(" ", w))
+    else
+      window.write(string.rep(" ", 1) .. row.text .. string.rep(" ", math.max(0, w - (1 + string.len(row.text)))))
+    end
   end
 end
 
@@ -50,7 +76,44 @@ local function update()
   refreshApps()
   list.removeAllRows()
   for i,a in ipairs(AppRegistry.registry) do
-    list.addRow({text = a.name, app = a})
+    local row = {text = a.name, app = a}
+    if a.icon and fs.exists(a.icon) then
+      row.icon = imageutils.loadFromFile(a.icon)[1]
+    end
+    if a.package and opm.resolveInfo(a.package) then
+      local info = opm.getInfo(a.package)
+      if info.osmium and info.osmium.home then
+        local home = info.osmium.home
+        row.backgroundColor = home.backgroundColor
+        row.textColor = home.textColor
+        if home.image then
+          local image = opm.resolveFile(a.package, home.image)
+          if fs.exists(image) then
+            local buffer = imageutils.crop(imageutils.loadFromFile(image), w, 3)
+            if not home.hideText then
+              if not buffer[1].fg[2] then
+                buffer[1].fg[2] = {}
+              end
+              if not buffer[1].text[2] then
+                buffer[1].text[2] = {}
+              end
+              for j = 1,#row.text do
+                buffer[1].fg[2][j + 1] = row.textColor or color
+                buffer[1].text[2][j + 1] = row.text:sub(j,j)
+              end
+            end
+            row.image = buffer
+          end
+        end
+      end
+      if info.icon and not row.image then
+        local icon = opm.resolveFile(a.package, info.icon)
+        if fs.exists(icon) then
+          row.icon = imageutils.loadFromFile(icon)[1]
+        end
+      end
+    end
+    list.addRow(row)
   end
 end
 
