@@ -100,7 +100,7 @@ function checkAppsFolder()
   local files = fs.list("/apps")
   for k,file in ipairs(files) do
     local name = file:match("[^/]+$")
-    if not index[name] then
+    if name:sub(1,1) ~= "." and not index[name] then
       local n, err = addFile(fs.combine("/apps", file))
       if not err then
         index[name] = true

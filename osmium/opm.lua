@@ -21,10 +21,12 @@ function listPackages()
     if fs.exists(d) and fs.isDir(d) then
       local files = fs.list(d)
       for j,f in ipairs(files) do
-        if string.sub(f, -4) == ".lua" then
-          table.insert(packages, string.sub(f, 0, -5))
-        else
-          table.insert(packages, f)
+        if f:sub(1,1) ~= "." then
+          if string.sub(f, -4) == ".lua" then
+            table.insert(packages, string.sub(f, 0, -5))
+          else
+            table.insert(packages, f)
+          end
         end
       end
     end
