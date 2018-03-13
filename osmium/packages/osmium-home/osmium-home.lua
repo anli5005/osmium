@@ -5,7 +5,7 @@ local IronScreen = opm.require("iron-screen")
 local OsmiumColors = opm.require("osmium-colors").colors
 local UI = opm.require("osmium-ui")
 
-local color = colors.green
+local color = colors.cyan
 local signOutColor = colors.red
 
 local loop = IronEventLoop.create()
@@ -15,6 +15,13 @@ local screen = IronScreen.create(term.current())
 local appRow = {height = 3, selectable = false}
 function appRow.drawLine(window, row, num, isSelected, x, y, w, view)
   local bkg = row.backgroundColor or OsmiumColors[color].colors[1]
+  local txt = row.textColor or color
+  if row.id % 2 > 0 and not row.backgroundColor then
+    bkg = OsmiumColors[color].colors[2]
+  end
+  --[[if row.id % 2 > 0 and not row.textColor then
+    txt = OsmiumColors[color].colors[1]
+  end]]--
   window.setCursorPos(x, y)
   if row.image then
     imageutils.drawImage({
@@ -25,7 +32,6 @@ function appRow.drawLine(window, row, num, isSelected, x, y, w, view)
       }
     }, bkg)
   else
-    local txt = row.textColor or color
     window.setBackgroundColor(bkg)
     window.setTextColor(txt)
     if row.icon and row.icon.bg and row.icon.bg[num] then
@@ -76,7 +82,7 @@ local function update()
   refreshApps()
   list.removeAllRows()
   for i,a in ipairs(AppRegistry.registry) do
-    local row = {text = a.name, app = a}
+    local row = {text = a.name, app = a, id = i}
     if a.icon and fs.exists(a.icon) then
       row.icon = imageutils.loadFromFile(a.icon)[1]
     end

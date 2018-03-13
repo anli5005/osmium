@@ -78,12 +78,19 @@ end
 
 function checkAppsFolder()
   local index = {}
+  local toRemove = {}
   for i,a in ipairs(registry) do
-    if a.package then
+    if not fs.exists(a.exec) then
+      table.insert(toRemove, i)
+    elseif a.package then
       index[a.package] = true
     elseif a.file then
       index[a.file] = true
     end
+  end
+
+  for h,remove in ipairs(toRemove) do
+    table.remove(registry, remove)
   end
 
   local packages = opm.listPackages()
