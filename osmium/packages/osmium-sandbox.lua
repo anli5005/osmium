@@ -330,7 +330,7 @@ function create(osmium, user, permissions, options)
 
     local opmenv = {}
     setmetatable(opmenv, {__index = result})
-    os.run(opmenv, "/osmium/opm.lua")
+    env.os.run(opmenv, "/osmium/opm.lua")
 
     local o = {}
     for k,v in pairs(opmenv) do

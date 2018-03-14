@@ -24,7 +24,7 @@ local w, h = term.getSize()
 
 local threads = {}
 local visibleThread = nil
-local focus = 0
+local focus = 1
 local barThread = nil
 local runningThread = nil
 
@@ -48,9 +48,9 @@ local function switchTo(index)
   visibleThread = index
   threads[index].window.setVisible(true)
   threads[index].window.redraw()
-  if focus == 1 then
+  --[[if focus == 1 then
     focus = 0
-  end
+  end]]--
 end
 
 local function removeThread(index)
@@ -106,7 +106,7 @@ eventLoop.all(function(event, ...)
         end
       end
     elseif barThread then
-      focus = 2
+      focus = 1
       local t = threads[barThread]
       if t.filter == event or not t.filter then
         runningThread = barThread

@@ -140,30 +140,34 @@ function create(window)
   end
 
   function self.draw()
-    local didDraw = false
-    for i,view in ipairs(self.views) do
-      if view.needsRedraw or didDraw then
-        view.draw(self.window)
-        didDraw = true
-        view.needsRedraw = false
+    if self.window then
+      local didDraw = false
+      for i,view in ipairs(self.views) do
+        if view.needsRedraw or didDraw then
+          view.draw(self.window)
+          didDraw = true
+          view.needsRedraw = false
+        end
       end
-    end
-    term.setCursorBlink(false)
-    if didDraw and self.focusView then
-      self.focusView.restoreCursor(self.window)
+      term.setCursorBlink(false)
+      if didDraw and self.focusView then
+        self.focusView.restoreCursor(self.window)
+      end
     end
   end
 
   function self.forceDraw()
-    self.window.setBackgroundColor(colors.black)
-    self.window.clear()
-    for i,view in ipairs(self.views) do
-      view.draw(self.window)
-      view.needsRedraw = false
-    end
-    term.setCursorBlink(false)
-    if self.focusView then
-      self.focusView.restoreCursor(self.window)
+    if self.window then
+      self.window.setBackgroundColor(colors.black)
+      self.window.clear()
+      for i,view in ipairs(self.views) do
+        view.draw(self.window)
+        view.needsRedraw = false
+      end
+      term.setCursorBlink(false)
+      if self.focusView then
+        self.focusView.restoreCursor(self.window)
+      end
     end
   end
 
