@@ -3,7 +3,7 @@ local IronScreen = opm.require("iron-screen")
 local OsmiumColors = opm.require("osmium-colors").colors
 local UI = opm.require("osmium-ui")
 
-local color = colors.blue
+local color = colors.gray
 local sideWidth = 14
 
 local w,h = term.getSize()
@@ -16,9 +16,9 @@ mainWindow.clear()
 
 local currentScreen
 local screens = {
-  colors = opm.require("osmium-settings-colors").create(w - sideWidth),
-  users = opm.require("osmium-settings-users").create(w - sideWidth),
-  updates = opm.require("osmium-settings-updates").create(w - sideWidth)
+  colors = opm.require("osmium-settings-colors").create(w - sideWidth, loop),
+  users = opm.require("osmium-settings-users").create(w - sideWidth, loop),
+  updates = opm.require("osmium-settings-updates").create(w - sideWidth, loop)
 }
 
 local function hideScreen(screen)

@@ -60,7 +60,7 @@ colors = {
     colors = {colors.white, colors.pink, colors.magenta}
   },
   [colors.black] = {
-    name = "Charcoal Black",
+    name = "Jet Black",
     colors = {colors.white, colors.lightGray, colors.gray}
   }
 }

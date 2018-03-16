@@ -313,6 +313,38 @@ function osmiumAPI.switchTo(thread)
   end
 end
 
+local isBroadcastingColorChange = false
+function osmiumAPI.setColor(color)
+  local shouldNotify = false
+  if color ~= user.color and not isBroadcastingColorChange then
+    shouldNotify = true
+  end
+  user.color = color
+  users.updateUser(user.id, user)
+  if shouldNotify then
+    isBroadcastingColorChange = true
+    local currentTerm = term.current()
+    eventLoop.emit("osmium:color")
+    term.redirect(currentTerm)
+    isBroadcastingColorChange = false
+  end
+end
+
+function osmiumAPI.setPassword(newPassword, oldPassword)
+  if (not user.password) or users.auth(user.id, oldPassword) then
+    if newPassword then
+      users.setPassword(user.id, newPassword)
+    else
+      user.password = nil
+      user.salt = nil
+      users.updateUser(user.id, user)
+    end
+    return true
+  else
+    return false
+  end
+end
+
 local homeThread
 function osmiumAPI.getHomeID()
   return homeThread

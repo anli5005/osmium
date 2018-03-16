@@ -5,7 +5,7 @@ local IronScreen = opm.require("iron-screen")
 local OsmiumColors = opm.require("osmium-colors").colors
 local UI = opm.require("osmium-ui")
 
-local color = colors.cyan
+local color = (osmium.user and osmium.user.color) or colors.blue
 local signOutColor = colors.red
 
 local loop = IronEventLoop.create()
@@ -138,6 +138,13 @@ list.on("click", function(row)
     end
     run(path)
   end
+end)
+
+loop.on("osmium:color", function()
+  color = (osmium.user and osmium.user.color) or colors.blue
+  list.backgroundColor = color
+
+  screen.forceDraw()
 end)
 
 screen.attach(loop)

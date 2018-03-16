@@ -33,6 +33,8 @@ list.backgroundColor = colors.gray
 list.textColor = colors.white
 list.update()
 
+local box = UI.box.create(17, 1, w - 16, h - 3, colors.black)
+
 local selectedUser = nil
 
 local passwordField = nil
@@ -44,6 +46,7 @@ local function login()
   end
   os.run(getfenv(), opm.resolve("osmium-env"), selectedUser)
   term.redirect(currentTerm)
+  userlist = users.getUsers()
   --sleep(10)
   screen.forceDraw()
 end
@@ -112,9 +115,13 @@ list.on("select", function(row)
     unlockButton.on("press", login)
     screen.addView(unlockButton)
   end
+
+  box.color = userlist[selectedUser].color or colors.blue
+  box.redraw()
 end)
 
 screen.addView(list)
+screen.addView(box)
 
 screen.attach(eventLoop)
 eventLoop.run()

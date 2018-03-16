@@ -4,7 +4,7 @@ local IronView = opm.require("iron-view")
 local OsmiumColors = opm.require("osmium-colors").colors
 local UI = opm.require("osmium-ui")
 
-local color = colors.orange
+local color = (osmium.user and osmium.user.color) or colors.blue
 
 local eventLoop = IronEventLoop.create()
 
@@ -100,14 +100,29 @@ eventLoop.on("osmium:barupdate", function()
   view.redraw()
 
   if osmium.getVisibleThread() == osmium.getHomeID() then
-    term.write(osmium.getVisibleThread())
-    term.write(osmium.getHomeID())
     button.backgroundColor = OsmiumColors[color].colors[1]
     button.redraw()
   else
     button.backgroundColor = OsmiumColors[color].colors[2]
     button.redraw()
   end
+end)
+
+eventLoop.on("osmium:color", function()
+  color = (osmium.user and osmium.user.color) or colors.blue
+  
+  updateBuffer()
+  view.redraw()
+
+  button.textColor = color
+  button.activeBackgroundColor = OsmiumColors[color].colors[2]
+  button.activeTextColor = OsmiumColors[color].colors[1]
+  if osmium.getVisibleThread() == osmium.getHomeID() then
+    button.backgroundColor = OsmiumColors[color].colors[1]
+  else
+    button.backgroundColor = OsmiumColors[color].colors[2]
+  end
+  button.redraw()
 end)
 
 screen.attach(eventLoop)

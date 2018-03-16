@@ -159,6 +159,7 @@ function setupOsmium()
       if checkbox.isChecked then
         result.password = passwordField.value
       end
+      result.color = colors.blue
       eventLoop.stop()
     end)
   end)

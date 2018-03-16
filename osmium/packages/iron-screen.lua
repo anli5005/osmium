@@ -26,7 +26,10 @@ function create(window)
     end
   end
 
-  function self._callbacks.mouse_up(button, x, y)
+  function self._callbacks.mouse_up(button, globalX, globalY)
+    local wx, wy = self.window.getPosition()
+    local x = globalX - wx + 1
+    local y = globalY - wy + 1
     for n = #self.views, 1, -1 do
       local view = self.views[n]
       if x >= view.x and x < view.x + view.w and y >= view.y and y < view.y + view.h then
