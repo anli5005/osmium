@@ -56,6 +56,7 @@ local function tryPassword()
     if users.auth(selectedUser, passwordField.value) then
       unlockButton.backgroundColor = colors.blue
       passwordField.placeholderColor = colors.lightGray
+      passwordField.value = ""
       login()
     else
       unlockButton.backgroundColor = colors.red

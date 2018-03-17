@@ -371,6 +371,7 @@ function create(osmium, user, permissions, options)
       else
         print(err)
       end
+      sleep(2)
     end
   end
 

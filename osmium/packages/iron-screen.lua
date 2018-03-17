@@ -9,7 +9,7 @@ function create(window)
     self.blur()
     for n = #self.views, 1, -1 do
       local view = self.views[n]
-      if x >= view.x and x < view.x + view.w and y >= view.y and y < view.y + view.h then
+      if view and x >= view.x and x < view.x + view.w and y >= view.y and y < view.y + view.h then
         if view.acceptsFocus and not self.focusView then
           self.focus(view)
         end

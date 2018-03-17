@@ -14,10 +14,13 @@ local mainWindow = window.create(term.current(), sideWidth + 1, 1, w - sideWidth
 mainWindow.setBackgroundColor(colors.white)
 mainWindow.clear()
 
+local sideWindow = window.create(term.current(), 1, 1, sideWidth, h)
+local sidebar = IronScreen.create(sideWindow)
+
 local currentScreen
 local screens = {
   colors = opm.require("osmium-settings-colors").create(w - sideWidth, loop),
-  users = opm.require("osmium-settings-users").create(w - sideWidth, loop),
+  users = opm.require("osmium-settings-users").create(w - sideWidth, loop, sidebar.forceDraw),
   updates = opm.require("osmium-settings-updates").create(w - sideWidth, loop)
 }
 
@@ -33,8 +36,6 @@ local function showScreen(screen)
   screen.forceDraw()
 end
 
-local sideWindow = window.create(term.current(), 1, 1, sideWidth, h)
-local sidebar = IronScreen.create(sideWindow)
 sidebar.addView(UI.box.create(sideWidth, 1, 1, h, colors.lightGray))
 
 local bar = UI.box.create(1, 1, sideWidth - 1, 3, color)

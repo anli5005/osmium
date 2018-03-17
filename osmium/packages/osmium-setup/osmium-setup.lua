@@ -4,7 +4,7 @@ local IronView = opm.require("iron-view")
 local UI = opm.require("osmium-ui")
 local TeletextUI = opm.require("osmium-teletext-ui")
 
-function setupOsmium()
+function setupOsmium(isAddingUser)
   local result = {}
 
   local eventLoop = IronEventLoop.create()
@@ -15,21 +15,25 @@ function setupOsmium()
   local screen = IronScreen.create(termWindow)
   screen.attach(eventLoop)
 
-  local osmiumText = "Osmium"
-  local label = UI.text.create(math.floor((w - string.len(osmiumText)) / 2), math.floor((h - 1) / 2), string.len(osmiumText), 1, osmiumText)
-  label.textColor = colors.lightGray
-  screen.addView(label, true)
+  if not isAddingUser then
+    local osmiumText = "Osmium"
+    local label = UI.text.create(math.floor((w - string.len(osmiumText)) / 2), math.floor((h - 1) / 2), string.len(osmiumText), 1, osmiumText)
+    label.textColor = colors.lightGray
+    screen.addView(label, true)
 
-  local button = UI.button.create(1, h - 2, w, 3, "Set up ->")
-  button.backgroundColor = colors.blue
-  button.textColor = colors.white
-  button.activeBackgroundColor = colors.cyan
-  button.activeTextColor = colors.white
-  screen.addView(button, true)
+    local button = UI.button.create(1, h - 2, w, 3, "Set up ->")
+    button.backgroundColor = colors.blue
+    button.textColor = colors.white
+    button.activeBackgroundColor = colors.cyan
+    button.activeTextColor = colors.white
+    screen.addView(button, true)
+  end
 
-  button.on("press", function()
-    screen.removeView(label)
-    screen.removeView(button)
+  local function setUp()
+    if not isAddingUser then
+      screen.removeView(label)
+      screen.removeView(button)
+    end
 
     local white = UI.box.create(1, 1, w, h, colors.white)
     screen.addView(white)
@@ -55,6 +59,10 @@ function setupOsmium()
     screen.addView(usernameField)
 
     local nextButton = UI.button.create(1, h - 2, w, 3, "Next ->")
+    if isAddingUser then
+      nextButton.x = 12
+      nextButton.w = w - 11
+    end
     nextButton.backgroundColor = colors.blue
     nextButton.textColor = colors.white
     nextButton.activeBackgroundColor = colors.cyan
@@ -83,6 +91,9 @@ function setupOsmium()
     prevButton.textColor = colors.white
     prevButton.activeBackgroundColor = colors.pink
     prevButton.activeTextColor = colors.white
+    if isAddingUser then
+      screen.addView(prevButton)
+    end
 
     local finishButton = UI.button.create(12, h - 2, w - 11, 3, "Finish ->")
     finishButton.backgroundColor = colors.green
@@ -90,34 +101,49 @@ function setupOsmium()
     finishButton.activeBackgroundColor = colors.lime
     finishButton.activeTextColor = colors.white
 
+    local isSettingPassword = false
+
     nextButton.on("press", function()
       screen.removeView(nextButton, true)
       screen.removeView(usernameField, true)
       screen.addView(checkbox, true)
       screen.addView(passwordField, true)
-      screen.addView(prevButton, true)
+      if not isAddingUser then
+        screen.addView(prevButton, true)
+      end
       screen.addView(finishButton, true)
 
       bigtext.text = "Safe and secure"
       description1.text = "In Osmium, you can set a password to"
       description2.text = "protect your account."
 
+      isSettingPassword = true
+
       screen.forceDraw()
     end)
 
     prevButton.on("press", function()
-      screen.removeView(prevButton, true)
-      screen.removeView(finishButton, true)
-      screen.removeView(checkbox, true)
-      screen.removeView(passwordField, true)
-      screen.addView(usernameField, true)
-      screen.addView(nextButton, true)
+      if isSettingPassword then
+        if not isAddingUser then
+          screen.removeView(prevButton, true)
+        end
+        screen.removeView(finishButton, true)
+        screen.removeView(checkbox, true)
+        screen.removeView(passwordField, true)
+        screen.addView(usernameField, true)
+        screen.addView(nextButton, true)
 
-      bigtext.text = "Hello, world!"
-      description1.text = "Welcome to Osmium!"
-      description2.text = "Start by creating an account."
+        bigtext.text = "Hello, world!"
+        description1.text = "Welcome to Osmium!"
+        description2.text = "Start by creating an account."
 
-      screen.forceDraw()
+        isSettingPassword = false
+
+        screen.forceDraw()
+      else
+        result = nil
+        eventLoop.stop()
+      end
     end)
 
     local function checkFinishDisabled()
@@ -138,22 +164,24 @@ function setupOsmium()
     end)
 
     finishButton.on("press", function()
-      screen.removeView(prevButton, true)
-      screen.removeView(finishButton, true)
-      screen.removeView(checkbox, true)
-      screen.removeView(passwordField, true)
-      screen.removeView(bigtext, true)
-      screen.removeView(description1, true)
-      screen.removeView(description2, true)
-      screen.removeView(white, true)
-      screen.addView(label, true)
+      if not isAddingUser then
+        screen.removeView(prevButton, true)
+        screen.removeView(finishButton, true)
+        screen.removeView(checkbox, true)
+        screen.removeView(passwordField, true)
+        screen.removeView(bigtext, true)
+        screen.removeView(description1, true)
+        screen.removeView(description2, true)
+        screen.removeView(white, true)
+        screen.addView(label, true)
 
-      local settingUpText = "Setting up..."
-      local settingUp = UI.text.create(math.floor((w - string.len(settingUpText)) / 2), label.y + 2, string.len(settingUpText), 1, settingUpText)
-      settingUp.textColor = colors.gray
-      screen.addView(settingUp, true)
+        local settingUpText = "Setting up..."
+        local settingUp = UI.text.create(math.floor((w - string.len(settingUpText)) / 2), label.y + 2, string.len(settingUpText), 1, settingUpText)
+        settingUp.textColor = colors.gray
+        screen.addView(settingUp, true)
 
-      screen.forceDraw()
+        screen.forceDraw()
+      end
 
       result.username = usernameField.value
       if checkbox.isChecked then
@@ -162,7 +190,13 @@ function setupOsmium()
       result.color = colors.blue
       eventLoop.stop()
     end)
-  end)
+  end
+
+  if isAddingUser then
+    setUp()
+  else
+    button.on("press", setUp)
+  end
 
   screen.forceDraw()
   eventLoop.run()
