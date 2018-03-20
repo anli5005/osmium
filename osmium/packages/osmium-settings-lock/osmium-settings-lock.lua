@@ -15,6 +15,15 @@ function addTo(screen, width, height)
   local text = nil
   local input = nil
   local button = nil
+  local password = nil
+
+  local function getPassword()
+    return password
+  end
+
+  local function setPassword(pass)
+    password = pass
+  end
 
   local unlock
   local createUnlockButton
@@ -55,7 +64,8 @@ function addTo(screen, width, height)
         button.setDisabled((not value) or #value < 1)
       end)
       button.on("press", function()
-        if users.auth(osmium.user.id, input.value) then
+        if (not osmium.user.password) or users.auth(osmium.user.id, input.value) then
+          password = input.value
           unlock()
         else
           button.backgroundColor = colors.red
@@ -82,6 +92,8 @@ function addTo(screen, width, height)
   end
 
   lock = function()
+    password = nil
+
     screen.removeView(text)
     screen.removeView(button)
 

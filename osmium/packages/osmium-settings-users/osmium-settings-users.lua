@@ -53,7 +53,7 @@ function create(w, loop, forceDraw)
   selectButton.activeTextColor = colors.gray
   screen.addView(selectButton)
 
-  local aboutName, aboutType, noPermissionLabel, passwordButton, deleteButton
+  local aboutName, aboutType, noPermissionLabel, passwordButton, adminButton, deleteButton, savePasswordButton, selectList
   local user = nil
   local userID = nil
 
@@ -71,6 +71,10 @@ function create(w, loop, forceDraw)
 
     if adminButton then
       screen.removeView(adminButton)
+    end
+
+    if deleteButton then
+      screen.removeView(deleteButton)
     end
   end
 
@@ -99,6 +103,100 @@ function create(w, loop, forceDraw)
     if osmium.user.admin or osmium.user.id == id then
       passwordButton = UI.button.create(2, 9, 17, 1, "Change Password")
       passwordButton.setDisabled(not lock.isUnlocked)
+      passwordButton.on("press", function()
+        screen.removeView(selectButton)
+        screen.removeView(passwordButton)
+
+        if adminButton then
+          screen.removeView(adminButton)
+        end
+
+        if deleteButton then
+          screen.removeView(deleteButton)
+        end
+
+        local password = UI.input.create(2, 11, w - 2, 1, "", "*")
+        password.placeholder = "Password"
+        screen.addView(password)
+
+        local checkbox = UI.checkbox.create(2, 9, w - 1, 1, "Use a password", not (not osmium.user.password))
+        checkbox.backgroundColor = colors.white
+        checkbox.textColor = colors.black
+        screen.addView(checkbox)
+
+        local function updatePasswordField(isChecked)
+          password.setDisabled(not isChecked)
+        end
+        updatePasswordField(not (not osmium.user.password))
+        checkbox.on("change", updatePasswordField)
+
+        local cancel = UI.button.create(2, 13, 8, 1, "Cancel")
+        cancel.on("press", function()
+          screen.removeView(checkbox)
+          screen.removeView(password)
+          screen.removeView(cancel)
+          screen.removeView(savePasswordButton)
+
+          screen.addView(selectButton)
+          screen.addView(passwordButton)
+
+          if adminButton then
+            screen.addView(adminButton)
+          end
+
+          if deleteButton then
+            screen.addView(deleteButton)
+          end
+
+          screen.forceDraw()
+        end)
+        screen.addView(cancel)
+
+        savePasswordButton = UI.button.create(11, 13, 6, 1, "Save")
+        savePasswordButton.backgroundColor = colors.blue
+        savePasswordButton.textColor = colors.white
+        savePasswordButton.on("press", function()
+          if checkbox.isChecked and #password.value > 0 then
+            if osmium.user.id == userID and not osmium.user.admin then
+              osmium.setPassword(password.value, lock.getPassword())
+              lock.setPassword(password.value)
+            else
+              users.setPassword(userID, password.value)
+            end
+          else
+            if osmium.user.id == userID and not osmium.user.admin then
+              osmium.setPassword(nil, lock.getPassword())
+              lock.setPassword(nil)
+            else
+              user.password = nil
+              user.salt = nil
+              users.updateUser(userID, user)
+            end
+          end
+
+          user = users.getUser(userID)
+          osmium.user = user
+
+          screen.removeView(checkbox)
+          screen.removeView(password)
+          screen.removeView(cancel)
+          screen.removeView(savePasswordButton)
+
+          screen.addView(selectButton)
+          screen.addView(passwordButton)
+
+          if adminButton then
+            screen.addView(adminButton)
+          end
+
+          if deleteButton then
+            screen.addView(deleteButton)
+          end
+
+          screen.forceDraw()
+        end)
+        screen.addView(savePasswordButton)
+      end)
       screen.addView(passwordButton)
 
       if osmium.user.admin then
@@ -131,6 +229,29 @@ function create(w, loop, forceDraw)
         deleteButton.backgroundColor = colors.red
         deleteButton.textColor = colors.white
         deleteButton.setDisabled(not lock.isUnlocked)
+        deleteButton.on("press", function()
+          users.removeUser(userID)
+          reset()
+          local rows = {}
+          local userlist = users.getUsers()
+          for i,user in pairs(userlist) do
+            if user.id == osmium.user.id then
+              user.username = user.username .. " (You)"
+            end
+            if user.admin then
+              table.insert(rows, {text = "[A] " .. user.username, id = i})
+            else
+              table.insert(rows, {text = "[ ] " .. user.username, id = i})
+            end
+          end
+          if osmium.user.admin then
+            table.insert(rows, {text = " +  Add user", add = true})
+          end
+
+          selectList = UI.list.create(2, 5, w - 2, h - 5, rows)
+          selectList.row.selectable = false
+          selectList.backgroundColor = colors.lightGray
+        end)
         screen.addView(deleteButton)
       end
     else
@@ -146,8 +267,11 @@ function create(w, loop, forceDraw)
       passwordButton.setDisabled(false)
     end
     if adminButton then
-      adminButton.setDisabled(false)
-      deleteButton.setDisabled(false)
+      adminButton.setDisabled(osmium.user.id == userID)
+      deleteButton.setDisabled(osmium.user.id == userID)
+    end
+    if savePasswordButton then
+      savePasswordButton.setDisabled(false)
     end
   end)
 
@@ -158,6 +282,9 @@ function create(w, loop, forceDraw)
     if adminButton then
       adminButton.setDisabled(true)
       deleteButton.setDisabled(true)
+    end
+    if savePasswordButton then
+      savePasswordButton.setDisabled(true)
     end
   end)
 
@@ -191,7 +318,7 @@ function create(w, loop, forceDraw)
     table.insert(rows, {text = " +  Add user", add = true})
   end
 
-  local selectList = UI.list.create(2, 5, w - 2, h - 5, rows)
+  selectList = UI.list.create(2, 5, w - 2, h - 5, rows)
   selectList.row.selectable = false
   selectList.backgroundColor = colors.lightGray
 
