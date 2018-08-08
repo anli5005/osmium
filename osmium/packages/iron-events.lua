@@ -1,5 +1,5 @@
 function create()
-  local self = {_callbacks = {}, _onceCallbacks = {}, _allCallbacks = {}}
+  local self = {_callbacks = {}, _onceCallbacks = {}, _allCallbacks = {}, _lastCallbacks = {}}
 
   function self.on(name, callback)
     if not self._callbacks[name] then
@@ -17,6 +17,10 @@ function create()
 
   function self.all(callback)
     table.insert(self._allCallbacks, callback)
+  end
+
+  function self.last(callback)
+    table.insert(self._lastCallbacks, callback)
   end
 
   function self.off(callback)
@@ -39,6 +43,11 @@ function create()
         table.remove(self._allCallbacks, n)
       end
     end
+    for n,c in ipairs(self._lastCallbacks) do
+      if c == callback then
+        table.remove(self._lastCallbacks, n)
+      end
+    end
   end
 
   function self.emit(name, ...)
@@ -56,6 +65,10 @@ function create()
     end
 
     for n,callback in ipairs(self._allCallbacks) do
+      callback(name, unpack(arg))
+    end
+
+    for n,callback in ipairs(self._lastCallbacks) do
       callback(name, unpack(arg))
     end
   end

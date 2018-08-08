@@ -325,6 +325,10 @@ function create(osmium, user, permissions, options)
       end
     end
 
+    if env.settings and env.settings.load then
+      env.settings.load(".settings")
+    end
+
     local result = {_G = env, _ENV = env}
     setmetatable(result, {__index = env})
 

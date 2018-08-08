@@ -1,3 +1,11 @@
+term.setBackgroundColor(colors.gray)
+term.setTextColor(colors.white)
+term.clear()
+term.setCursorPos(2,2)
+term.write("Settings")
+
+sleep(0.1)
+
 local IronEventLoop = opm.require("iron-event-loop")
 local IronScreen = opm.require("iron-screen")
 local OsmiumColors = opm.require("osmium-colors").colors
@@ -10,19 +18,20 @@ local w,h = term.getSize()
 
 local loop = IronEventLoop.create()
 
-local mainWindow = window.create(term.current(), sideWidth + 1, 1, w - sideWidth, h)
-mainWindow.setBackgroundColor(colors.white)
-mainWindow.clear()
-
-local sideWindow = window.create(term.current(), 1, 1, sideWidth, h)
+local sideWindow = window.create(term.current(), 1, 1, sideWidth, h, false)
 local sidebar = IronScreen.create(sideWindow)
 
 local currentScreen
 local screens = {
   colors = opm.require("osmium-settings-colors").create(w - sideWidth, loop),
-  users = opm.require("osmium-settings-users").create(w - sideWidth, loop, sidebar.forceDraw),
+  users = opm.require("osmium-settings-users").create(w - sideWidth, loop, sidebar.requestForceDraw),
   updates = opm.require("osmium-settings-updates").create(w - sideWidth, loop)
 }
+
+local mainWindow = window.create(term.current(), sideWidth + 1, 1, w - sideWidth, h)
+mainWindow.setBackgroundColor(colors.white)
+mainWindow.clear()
+sideWindow.setVisible(true)
 
 local function hideScreen(screen)
   screen.detach(loop)
@@ -33,7 +42,7 @@ end
 local function showScreen(screen)
   screen.window = mainWindow
   screen.attach(loop)
-  screen.forceDraw()
+  screen.requestForceDraw()
 end
 
 sidebar.addView(UI.box.create(sideWidth, 1, 1, h, colors.lightGray))

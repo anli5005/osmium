@@ -148,7 +148,7 @@ function create(w, loop, forceDraw)
             screen.addView(deleteButton)
           end
 
-          screen.forceDraw()
+          screen.requestForceDraw()
         end)
         screen.addView(cancel)
 
@@ -193,7 +193,7 @@ function create(w, loop, forceDraw)
             screen.addView(deleteButton)
           end
 
-          screen.forceDraw()
+          screen.requestForceDraw()
         end)
         screen.addView(savePasswordButton)
       end)
@@ -251,6 +251,15 @@ function create(w, loop, forceDraw)
           selectList = UI.list.create(2, 5, w - 2, h - 5, rows)
           selectList.row.selectable = false
           selectList.backgroundColor = colors.lightGray
+          selectList.on("click", function(row)
+            if row.id then
+              selectUser(row.id)
+            else
+              addUser()
+            end
+            showingUsers = false
+            screen.removeView(selectList)
+          end)
         end)
         screen.addView(deleteButton)
       end
@@ -295,11 +304,43 @@ function create(w, loop, forceDraw)
       if result.password then
         users.setPassword(id, result.password)
       end
-      os.reboot()
-    else
-      forceDraw()
-      screen.forceDraw()
+
+      screen.removeView(selectList)
+
+      local rows = {}
+      local userlist = users.getUsers()
+      for i,user in pairs(userlist) do
+        if user.id == osmium.user.id then
+          user.username = user.username .. " (You)"
+        end
+        if user.admin then
+          table.insert(rows, {text = "[A] " .. user.username, id = i})
+        else
+          table.insert(rows, {text = "[ ] " .. user.username, id = i})
+        end
+      end
+      if osmium.user.admin then
+        table.insert(rows, {text = " +  Add user", add = true})
+      end
+
+      selectList = UI.list.create(2, 5, w - 2, h - 5, rows)
+      selectList.row.selectable = false
+      selectList.backgroundColor = colors.lightGray
+      selectList.on("click", function(row)
+        if row.id then
+          selectUser(row.id)
+        else
+          addUser()
+        end
+        showingUsers = false
+        screen.removeView(selectList)
+      end)
+
+      selectUser(id)
     end
+
+    forceDraw()
+    screen.requestForceDraw()
   end
 
   local rows = {}
@@ -324,6 +365,7 @@ function create(w, loop, forceDraw)
 
   local showingUsers = false
   selectList.on("click", function(row)
+    showingUsers = true
     if row.id then
       selectUser(row.id)
     else
@@ -337,6 +379,9 @@ function create(w, loop, forceDraw)
     if not showingUsers then
       screen.addView(selectList)
       showingUsers = true
+    else
+      screen.removeView(selectList)
+      showingUsers = false
     end
   end)
 

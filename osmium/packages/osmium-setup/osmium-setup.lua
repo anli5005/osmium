@@ -15,13 +15,15 @@ function setupOsmium(isAddingUser)
   local screen = IronScreen.create(termWindow)
   screen.attach(eventLoop)
 
+  local label
+  local button
   if not isAddingUser then
     local osmiumText = "Osmium"
-    local label = UI.text.create(math.floor((w - string.len(osmiumText)) / 2), math.floor((h - 1) / 2), string.len(osmiumText), 1, osmiumText)
+    label = UI.text.create(math.floor((w - string.len(osmiumText)) / 2), math.floor((h - 1) / 2), string.len(osmiumText), 1, osmiumText)
     label.textColor = colors.lightGray
     screen.addView(label, true)
 
-    local button = UI.button.create(1, h - 2, w, 3, "Set up ->")
+    button = UI.button.create(1, h - 2, w, 3, "Set up ->")
     button.backgroundColor = colors.blue
     button.textColor = colors.white
     button.activeBackgroundColor = colors.cyan
@@ -119,7 +121,7 @@ function setupOsmium(isAddingUser)
 
       isSettingPassword = true
 
-      screen.forceDraw()
+      screen.requestForceDraw()
     end)
 
     prevButton.on("press", function()
@@ -139,7 +141,7 @@ function setupOsmium(isAddingUser)
 
         isSettingPassword = false
 
-        screen.forceDraw()
+        screen.needsForceRedraw = true
       else
         result = nil
         eventLoop.stop()
@@ -173,14 +175,16 @@ function setupOsmium(isAddingUser)
         screen.removeView(description1, true)
         screen.removeView(description2, true)
         screen.removeView(white, true)
-        screen.addView(label, true)
+        if label then
+          screen.addView(label, true)
+        end
 
         local settingUpText = "Setting up..."
         local settingUp = UI.text.create(math.floor((w - string.len(settingUpText)) / 2), label.y + 2, string.len(settingUpText), 1, settingUpText)
         settingUp.textColor = colors.gray
         screen.addView(settingUp, true)
 
-        screen.forceDraw()
+        screen.requestForceDraw()
       end
 
       result.username = usernameField.value

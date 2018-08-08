@@ -345,11 +345,11 @@ function scroller.create(view, contentHeight, color)
       self.isScrolling = true
       local y = event.y - self.view.y + 1
       local h = math.ceil((self.view.h / self.contentHeight) * self.view.h)
-      if y < self.pos or y >= self.pos + h then
+      if y < math.floor((self.pos / self.contentHeight) * self.view.h) or y >= math.ceil((self.pos / self.contentHeight) * self.view.h) + h then
         self._dragPos = 0
         self.drag(event)
         return true
-      elseif not self.isVisible then
+      else
         self._dragPos = y - math.ceil((self.pos / self.contentHeight) * self.view.h)
         self.view.redraw()
         return true

@@ -23,7 +23,7 @@ local screen = opm.require("iron-screen").create(termWindow)
 
 local userlist = users.getUsers()
 local rows = {}
-for k,v in ipairs(userlist) do
+for k,v in pairs(userlist) do
   table.insert(rows, {id = k, text = v.username})
 end
 
@@ -48,7 +48,13 @@ local function login()
   term.redirect(currentTerm)
   userlist = users.getUsers()
   --sleep(10)
-  screen.forceDraw()
+  passwordField.cursorPos = 0
+  local userlist = users.getUsers()
+  list.rows = {}
+  for k,v in ipairs(userlist) do
+    table.insert(list.rows, {id = k, text = v.username})
+  end
+  screen.requestForceDraw()
 end
 
 local function tryPassword()

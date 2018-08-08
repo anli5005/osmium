@@ -20,7 +20,7 @@ function create(w)
       os.run({}, "/rom/programs/http/pastebin.lua", "run", "0fVDrAC1")
       os.reboot()
     end)
-    screen.addView(update)
+    --screen.addView(update)
   end
 
   return screen

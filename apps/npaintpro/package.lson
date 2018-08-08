@@ -1,0 +1,13 @@
+{
+  name = "npaintpro",
+  osmium = {
+    name = "NPaintPro",
+    app = true,
+    home = {
+      backgroundColor = 1,
+      textColor = 2048,
+      hideText = true,
+      image = "npaintpro.nft"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 function create(window)
-  local self = {window = window, focusView = nil, views = {}, _callbacks = {}}
+  local self = {window = window, focusView = nil, views = {}, _callbacks = {}, needsRedraw = false, needsForceRedraw = false}
 
   function self._callbacks.mouse_click(button, globalX, globalY)
     local wx, wy = self.window.getPosition()
@@ -107,24 +107,20 @@ function create(window)
     end
   end
 
-  function self.addView(view, skipRedraw)
+  function self.addView(view)
     table.insert(self.views, view)
     view.screen = self
-    if not skipRedraw then
-      self.draw()
-    end
+    self.requestDraw()
   end
 
-  function self.removeView(view, skipRedraw)
+  function self.removeView(view)
     for n,v in ipairs(self.views) do
       if v == view then
         v.screen = nil
         table.remove(self.views, n)
       end
     end
-    if not skipRedraw then
-      self.forceDraw()
-    end
+    self.requestForceDraw()
   end
 
   function self.focus(view)
@@ -174,16 +170,48 @@ function create(window)
     end
   end
 
-  function self.attach(loop)
-    for k,v in pairs(self._callbacks) do
-      loop.on(k, v)
+  function self.requestDraw()
+    if self.loop and self.loop.running then
+      self.needsRedraw = true
+    else
+      self.draw()
     end
   end
 
-  function self.detach(loop)
-    for k,v in pairs(self._callbacks) do
-      loop.off(v)
+  function self.requestForceDraw()
+    if self.loop and self.loop.running then
+      self.needsForceRedraw = true
+    else
+      self.forceDraw()
     end
+  end
+
+  function self._lastHandler()
+    if self.needsForceRedraw then
+      self.forceDraw()
+    elseif self.needsRedraw then
+      self.draw()
+    end
+    self.needsRedraw = false
+    self.needsForceRedraw = false
+  end
+
+  function self.attach(loop)
+    if self.loop == nil then
+      self.loop = loop
+      for k,v in pairs(self._callbacks) do
+        loop.on(k, v)
+      end
+      loop.last(self._lastHandler)
+    end
+  end
+
+  function self.detach()
+    for k,v in pairs(self._callbacks) do
+      self.loop.off(v)
+    end
+    self.loop.off(self._lastHandler)
+    self.loop = nil
   end
 
   return self

@@ -14,14 +14,14 @@ function create(x, y, w, h)
   function self.redraw()
     self.needsRedraw = true
     if self.screen and self.screen.window then
-      self.screen.draw()
+      self.screen.requestDraw()
     end
   end
 
   function self.forceRedraw()
     self.needsRedraw = true
     if self.screen and self.screen.window then
-      self.screen.forceDraw()
+      self.screen.requestForceDraw()
     end
   end
 
