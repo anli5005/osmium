@@ -316,7 +316,7 @@ function scroller.create(view, contentHeight, color)
     if self.isVisible then
       local x = self.view.x + self.view.w - 1
       local y = math.min(math.ceil((math.max(1, self.pos + 1) / self.contentHeight) * self.view.h) + self.view.y - 1, self.view.y + self.view.h - 1)
-      local h = math.min(math.ceil((self.view.h / self.contentHeight) * self.view.h), self.view.h + 2 - y)
+      local h = math.min(math.ceil((self.view.h / self.contentHeight) * self.view.h), self.view.h - 1)
       window.setBackgroundColor(self.color)
       for i = 0,h - 1 do
         window.setCursorPos(x, y + i)

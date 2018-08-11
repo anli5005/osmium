@@ -22,7 +22,7 @@ function create(osmium, user, permissions, options)
     end
 
     if mode == "w" and not self.permissions.editSystem then
-      if path[1] == "osmium" or path[1] == "boot" or path[1] == "startup" or path[1] == "startup.lua" then
+      if path[1] == "osmium" or path[1] == "boot" or path[1] == "startup" or path[1] == "startup.lua" or path[1] == ".settings" then
         return false, "editSystem"
       end
     end
@@ -325,7 +325,12 @@ function create(osmium, user, permissions, options)
       end
     end
 
-    if env.settings and env.settings.load then
+    if env.settings and env.settings.set and env.settings.load then
+      env.settings.set("shell.autocomplete", true)
+      env.settings.set("lua.autocomplete", true)
+      env.settings.set("edit.autocomplete", true)
+      env.settings.set("shell.allow_disk_startup", true)
+      env.settings.set("shell.allow_startup", true)
       env.settings.load(".settings")
     end
 

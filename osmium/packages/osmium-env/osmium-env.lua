@@ -32,10 +32,12 @@ local unexpected = true
 
 local function createThread(fn, win)
   local thread = {coroutine = coroutine.create(fn), window = win or window.create(currentTerm, 1, 1, w, h - 1, false), interacted = false}
+  thread.current = thread.window
   table.insert(threads, thread)
   local curr = term.current()
   term.redirect(thread.window)
   thread.success, thread.filter = coroutine.resume(thread.coroutine)
+  thread.current = term.current()
   thread.status = coroutine.status(thread.coroutine)
   term.redirect(curr)
   return #threads, thread
@@ -76,9 +78,10 @@ eventLoop.all(function(event, ...)
     for i,t in pairs(threads) do
       if t and (t.filter == event or not t.filter) then
         runningThread = i
-        term.redirect(t.window)
+        term.redirect(t.current)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
         t.status = coroutine.status(t.coroutine)
+        t.current = term.current()
         t.interacted = true
         if t.status == "dead" then
           table.insert(toRemove, i)
@@ -96,9 +99,10 @@ eventLoop.all(function(event, ...)
         local t = threads[visibleThread]
         if t.filter == event or not t.filter then
           runningThread = visibleThread
-          term.redirect(t.window)
+          term.redirect(t.current)
           t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
           t.status = coroutine.status(t.coroutine)
+          t.current = term.current()
           t.interacted = true
           if t.status == "dead" then
             removeThread(visibleThread)
@@ -110,11 +114,12 @@ eventLoop.all(function(event, ...)
       local t = threads[barThread]
       if t.filter == event or not t.filter then
         runningThread = barThread
-        term.redirect(t.window)
+        term.redirect(t.current)
         local resumeArgs = arg
         resumeArgs[3] = 1
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
         t.status = coroutine.status(t.coroutine)
+        t.current = term.current()
         t.interacted = true
         if t.status == "dead" then
           removeThread(barThread)
@@ -130,9 +135,10 @@ eventLoop.all(function(event, ...)
         local t = threads[visibleThread]
         if t.filter == event or not t.filter then
           runningThread = visibleThread
-          term.redirect(t.window)
+          term.redirect(t.current)
           t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
           t.status = coroutine.status(t.coroutine)
+          t.current = term.current()
           t.interacted = true
           if t.status == "dead" then
             removeThread(visibleThread)
@@ -143,11 +149,12 @@ eventLoop.all(function(event, ...)
       local t = threads[barThread]
       if t.filter == event or not t.filter then
         runningThread = barThread
-        term.redirect(t.window)
+        term.redirect(t.current)
         local resumeArgs = arg
         resumeArgs[3] = 1
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
         t.status = coroutine.status(t.coroutine)
+        t.current = term.current()
         t.interacted = true
         if t.status == "dead" then
           removeThread(barThread)
@@ -160,9 +167,10 @@ eventLoop.all(function(event, ...)
         local t = threads[visibleThread]
         if t.filter == event or not t.filter then
           runningThread = visibleThread
-          term.redirect(t.window)
+          term.redirect(t.current)
           t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
           t.status = coroutine.status(t.coroutine)
+          t.current = term.current()
           t.interacted = true
           if t.status == "dead" then
             removeThread(visibleThread)
@@ -174,11 +182,12 @@ eventLoop.all(function(event, ...)
         local t = threads[barThread]
         if t.filter == event or not t.filter then
           runningThread = barThread
-          term.redirect(t.window)
+          term.redirect(t.current)
           local resumeArgs = arg
           resumeArgs[3] = 1
           t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(resumeArgs))
           t.status = coroutine.status(t.coroutine)
+          t.current = term.current()
           t.interacted = true
           if t.status == "dead" then
             removeThread(barThread)
@@ -191,8 +200,9 @@ eventLoop.all(function(event, ...)
       local t = threads[barThread]
       if t and (t.filter == event or not t.filter) then
         local c = term.current()
-        term.redirect(t.window)
+        term.redirect(t.current)
         t.success, t.filter = coroutine.resume(t.coroutine, event, unpack(arg))
+        t.current = term.current()
         term.redirect(c)
         t.status = coroutine.status(t.coroutine)
         t.interacted = true

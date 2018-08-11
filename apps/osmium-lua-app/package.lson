@@ -1,0 +1,13 @@
+{
+  name = "osmium-lua-app",
+  osmium = {
+    name = "Lua Prompt",
+    app = true,
+    home = {
+      backgroundColor = 32768,
+      textColor = 1,
+      image = "lua.nft",
+      hideText = true
+    }
+  }
+}

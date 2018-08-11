@@ -23,9 +23,11 @@ local sidebar = IronScreen.create(sideWindow)
 
 local currentScreen
 local screens = {
+  about = opm.require("osmium-settings-about").create(w - sideWidth, loop),
   colors = opm.require("osmium-settings-colors").create(w - sideWidth, loop),
   users = opm.require("osmium-settings-users").create(w - sideWidth, loop, sidebar.requestForceDraw),
-  updates = opm.require("osmium-settings-updates").create(w - sideWidth, loop)
+  updates = opm.require("osmium-settings-updates").create(w - sideWidth, loop),
+  system = opm.require("osmium-settings-system").create(w - sideWidth, loop)
 }
 
 local mainWindow = window.create(term.current(), sideWidth + 1, 1, w - sideWidth, h)
@@ -56,12 +58,26 @@ sidebar.addView(barText)
 
 local rows = {
   {
+    screen = "about",
+    text = "About"
+  },
+  {
+    text = string.rep("-", sideWidth - 3)
+  },
+  {
     screen = "colors",
     text = "Colors"
   },
   {
+    text = string.rep("-", sideWidth - 3)
+  },
+  {
     screen = "users",
     text = "Users"
+  },
+  {
+    screen = "system",
+    text = "System"
   },
   {
     screen = "updates",

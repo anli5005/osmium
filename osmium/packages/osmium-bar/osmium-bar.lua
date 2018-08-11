@@ -76,7 +76,7 @@ function updateBuffer()
     if t.id == visible then
       bkg = txt
       txt = color
-      buffer[k] = {text = "X", textColor = colors.white, color = colors.red, id = t.id, close = true}
+      buffer[k] = {text = "x", textColor = bkg, color = OsmiumColors[color].colors[3], id = t.id, close = true}
       k = k + 1
     end
     buffer[k] = {text = " ", textColor = txt, color = bkg, id = t.id, close = false}
@@ -110,7 +110,7 @@ end)
 
 eventLoop.on("osmium:color", function()
   color = (osmium.user and osmium.user.color) or colors.blue
-  
+
   updateBuffer()
   view.redraw()
 
