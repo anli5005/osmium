@@ -106,7 +106,7 @@ function create(osmium, user, permissions, options)
 
     function env.fs.getSize(path)
       if self.tryAccessing(path, "r") then
-        return fs.isDir(path)
+        return fs.getSize(path)
       else
         return 0
       end

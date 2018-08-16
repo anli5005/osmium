@@ -44,7 +44,11 @@ local function login()
   if not fs.exists(fs.combine("/home", userlist[selectedUser].username)) then
     fs.makeDir(fs.combine("/home", userlist[selectedUser].username))
   end
+  os.oldPullEvent = os.pullEvent
+  os.pullEvent = os.pullEventRaw
   os.run(getfenv(), opm.resolve("osmium-env"), selectedUser)
+  os.pullEvent = os.oldPullEvent
+  os.oldPullEvent = nil
   term.redirect(currentTerm)
   userlist = users.getUsers()
   --sleep(10)

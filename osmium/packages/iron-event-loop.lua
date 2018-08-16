@@ -30,5 +30,18 @@ function create()
     self._isStopping = true
   end
 
+  function self.timeout(callback, timeout)
+    local timerHandler
+    local timerID
+    timerHandler = function(timer)
+      if timer == timerID then
+        self.off(timerHandler)
+        callback()
+      end
+    end
+    self.on("timer", timerHandler)
+    timerID = os.startTimer(timeout)
+  end
+
   return self
 end

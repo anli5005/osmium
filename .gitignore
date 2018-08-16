@@ -4,3 +4,4 @@ home
 *.log
 osmium/settings
 *.ltn
+local

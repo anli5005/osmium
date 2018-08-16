@@ -27,6 +27,7 @@ local visibleThread = nil
 local focus = 1
 local barThread = nil
 local runningThread = nil
+local homeThread = nil
 
 local unexpected = true
 
@@ -73,7 +74,11 @@ local function removeThread(index)
 end
 
 eventLoop.all(function(event, ...)
-  if event ~= "mouse_click" and event ~= "mouse_up" and event ~= "mouse_scroll" and event ~= "mouse_drag" and event ~= "char" and event ~= "key" and event ~= "paste" and event ~= "key_up" and event ~= "osmium:barupdate" then
+  if event == "terminate" then
+    if visibleThread ~= homeThread then
+      removeThread(visibleThread)
+    end
+  elseif event ~= "mouse_click" and event ~= "mouse_up" and event ~= "mouse_scroll" and event ~= "mouse_drag" and event ~= "char" and event ~= "key" and event ~= "paste" and event ~= "key_up" and event ~= "osmium:barupdate" then
     local toRemove = {}
     for i,t in pairs(threads) do
       if t and (t.filter == event or not t.filter) then
@@ -355,7 +360,6 @@ function osmiumAPI.setPassword(newPassword, oldPassword)
   end
 end
 
-local homeThread
 function osmiumAPI.getHomeID()
   return homeThread
 end

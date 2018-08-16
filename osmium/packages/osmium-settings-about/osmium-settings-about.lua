@@ -1,6 +1,7 @@
 local IronScreen = opm.require("iron-screen")
 local UI = opm.require("osmium-ui")
 local TeletextUI = opm.require("osmium-teletext-ui")
+local filesize = opm.require("osmium-filesize")
 
 local a,h = term.getSize()
 
@@ -44,6 +45,8 @@ function create(w)
     "Type: " .. computerType,
     "Host: " .. _HOST or (_CC_VERSION .. "(MC " .. _MC_VERSION .. ")"),
     os.version(),
+    "",
+    filesize.formatDiskSize(fs.getFreeSpace("/")) .. " bytes free",
     "",
     "Credits",
     "Design & Code - anli5005",

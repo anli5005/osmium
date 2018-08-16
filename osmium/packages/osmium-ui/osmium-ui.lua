@@ -502,6 +502,7 @@ function list.create(x, y, w, h, rows, row)
         self.emit("paddingClick")
       end
     end
+    return true
   end
 
   function self.drag(event)

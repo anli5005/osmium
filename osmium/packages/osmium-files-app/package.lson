@@ -1,0 +1,13 @@
+{
+  name = "osmium-files-app",
+  osmium = {
+    name = "Files",
+    app = true,
+    home = {
+      backgroundColor = 32768,
+      textColor = 16,
+      image = "files.nft",
+      hideText = true
+    }
+  }
+}
