@@ -2,6 +2,7 @@ local IronScreen = opm.require("iron-screen")
 local UI = opm.require("osmium-ui")
 local events = opm.require("iron-events")
 local filesize = opm.require("osmium-filesize")
+local filetypes = opm.require("osmium-filetype-registry")
 
 function create(window, options)
   local self = events.create()
@@ -9,38 +10,7 @@ function create(window, options)
   self.back = {}
   self.forward = {}
 
-  self.extensions = {
-    lua = {
-      bg = colors.black,
-      fg = colors.yellow,
-      text = "l"
-    },
-    lson = {
-      bg = colors.black,
-      fg = colors.red,
-      text = "="
-    },
-    txt = {
-      bg = colors.white,
-      fg = colors.black,
-      text = "T"
-    },
-    nfp = {
-      bg = colors.cyan,
-      fg = colors.white,
-      text = "p"
-    },
-    nfa = {
-      bg = colors.cyan,
-      fg = colors.white,
-      text = "a"
-    },
-    nft = {
-      bg = colors.cyan,
-      fg = colors.yellow,
-      text = "t"
-    }
-  }
+  self.extensions = filetypes.getAll()
 
   local home = fs.combine("home", osmium.user.username)
   local apps = "apps"
@@ -66,6 +36,48 @@ function create(window, options)
       desc = desc .. " (read-only)"
     end
     return desc
+  end
+
+  function self.getAppsFor(path)
+    local ext = path:match("^.+(%..+)$")
+    local type = ".file"
+    if ext then
+      type = ext:sub(2)
+    end
+    local extdata = self.extensions[type]
+    if not (extdata and extdata.preferred) then
+      extdata = self.extensions[".file"]
+    end
+    local apps = {}
+    local l = #extdata.preferred
+    for k,v in ipairs(extdata.preferred) do
+      apps[k] = v
+    end
+    for k,v in ipairs(extdata.canOpen) do
+      apps[l + k] = v
+    end
+    return apps
+  end
+
+  function self.openFile(path)
+    local app = self.getAppsFor(path)[1]
+    local args = app.args or {}
+    local slashPath = path
+    if slashPath:sub(1,1) ~= "/" then
+      slashPath = "/" .. slashPath
+    end
+    local tabID
+    if app.execute then
+      tabID = osmium.run(path, unpack(args))
+    else
+      local runtimeArgs = {}
+      for k,v in ipairs(args) do
+        runtimeArgs[k] = v
+      end
+      table.insert(runtimeArgs, slashPath)
+      tabID = osmium.run(app.exec, unpack(runtimeArgs))
+    end
+    osmium.switchTo(tabID)
   end
 
   local w, h = window.getSize()
@@ -250,12 +262,16 @@ function create(window, options)
     end
   end)
 
+  local selectedFile
   if options.action then
     local bottomBar = UI.box.create(1, h - 2, w, 3, colors.lightGray)
     self.screen.addView(bottomBar)
 
     local cancel = UI.button.create(2, h - 1, 8, 1, "Cancel")
     cancel.backgroundColor = colors.white
+    cancel.on("press", function()
+      self.emit("cancel")
+    end)
     self.screen.addView(cancel)
 
     local done = UI.button.create(w - 7, h - 1, 6, 1)
@@ -267,6 +283,11 @@ function create(window, options)
       done.text = "Save"
     else
       done.text = "Open"
+      done.on("press", function()
+        if selectedFile then
+          self.emit("open", selectedFile)
+        end
+      end)
     end
     self.screen.addView(done)
 
@@ -288,6 +309,15 @@ function create(window, options)
   list.setPadding(0)
   list.backgroundColor = colors.white
   list.row = {selectable = true, height = 1}
+  function list.row.drawIcon(window, type)
+    if type and self.extensions[type] then
+      window.setBackgroundColor(self.extensions[type].bg)
+      window.setTextColor(self.extensions[type].fg)
+      window.write(self.extensions[type].text)
+    else
+      list.row.drawIcon(window, ".file")
+    end
+  end
   function list.row.drawLine(window, row, num, isSelected, x, y, w, view)
     window.setCursorPos(x, y)
     if row.path == "/" or row.path == "" then
@@ -311,18 +341,9 @@ function create(window, options)
       window.setTextColor(colors.gray)
       window.write("R")
     elseif row.isDir then
-      window.setBackgroundColor(colors.lightBlue)
-      window.setTextColor(colors.cyan)
-      window.write("/")
-    elseif row.type and self.extensions[string.sub(row.type, 2)] then
-      local ext = self.extensions[string.sub(row.type, 2)]
-      window.setBackgroundColor(ext.bg)
-      window.setTextColor(ext.fg)
-      window.write(ext.text)
+      list.row.drawIcon(window, ".dir")
     else
-      window.setBackgroundColor(colors.white)
-      window.setTextColor(colors.lightGray)
-      window.write("-")
+      list.row.drawIcon(window, row.type and row.type:sub(2))
     end
     if isSelected then
       window.setBackgroundColor(view.selectedBackgroundColor or colors.blue)
@@ -345,6 +366,8 @@ function create(window, options)
   function self.handleDoubleClick(row)
     if row.isDir then
       self.navigate(row.path)
+    elseif not options.action then
+      self.openFile(row.path)
     end
   end
 
@@ -360,6 +383,13 @@ function create(window, options)
           lastRowClicked = nil
         end
       end, 0.4)
+    end
+  end)
+  list.on("select", function(row)
+    if row then
+      selectedFile = row.path
+    else
+      selectedFile = nil
     end
   end)
 
@@ -392,6 +422,7 @@ function create(window, options)
   end
 
   function self.go(dir)
+    selectedFile = nil
     self.dir = dir
     path.text = self.getPathDescription(dir) .. " v"
     path.redraw()

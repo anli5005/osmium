@@ -1,0 +1,13 @@
+{
+  name = "osmium-edit-app",
+  osmium = {
+    name = "Edit",
+    app = true,
+    home = {
+      backgroundColor = 32768,
+      textColor = 1,
+      image = "edit.nft",
+      hideText = true
+    }
+  }
+}

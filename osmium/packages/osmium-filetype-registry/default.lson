@@ -1,0 +1,109 @@
+{
+  lua = {
+    bg = 32768,
+    fg = 16,
+    text = "l",
+    preferred = {
+      {
+        execute = true
+      },
+      {
+        name = "Edit",
+        exec = "apps/osmium-edit-app/osmium-edit-app.lua"
+      }
+    },
+    canOpen = {}
+  },
+  lson = {
+    bg = 32768,
+    fg = 16384,
+    text = "=",
+    preferred = {
+      {
+        name = "Edit",
+        exec = "apps/osmium-edit-app/osmium-edit-app.lua"
+      }
+    },
+    canOpen = {}
+  },
+  txt = {
+    bg = 1,
+    fg = 32768,
+    text = "T",
+    preferred = {
+      {
+        name = "Ink",
+        exec = "apps/Ink/startup"
+      }
+    },
+    canOpen = {}
+  },
+  nfp = {
+    bg = 512,
+    fg = 1,
+    text = "p",
+    preferred = {
+      {
+        name = "NPaintPro",
+        exec = "apps/npaintpro/npaintpro.lua"
+      }
+    },
+    canOpen = {}
+  },
+  nfa = {
+    bg = 512,
+    fg = 1,
+    text = "a",
+    preferred = {
+      {
+        name = "NPaintPro",
+        exec = "apps/npaintpro/npaintpro.lua"
+      }
+    },
+    canOpen = {}
+  },
+  nft = {
+    bg = 512,
+    fg = 16,
+    text = "t",
+    preferred = {
+      {
+        name = "NPaintPro",
+        exec = "apps/npaintpro/npaintpro.lua"
+      }
+    },
+    canOpen = {}
+  },
+  [".file"] = {
+    bg = 1,
+    fg = 256,
+    text = "-",
+    preferred = {},
+    canOpen = {
+      {
+        name = "Edit",
+        exec = "apps/osmium-edit-app/osmium-edit-app.lua"
+      },
+      {
+        name = "NPaintPro",
+        exec = "apps/npaintpro/npaintpro.lua",
+        args = {"-p"}
+      },
+      {
+        execute = true
+      }
+    }
+  },
+  [".dir"] = {
+    bg = 8,
+    fg = 512,
+    text = "/",
+    preferred = {
+      {
+        name = "Files",
+        exec = "osmium/packages/osmium-files-app/osmium-files-app.lua"
+      }
+    },
+    canOpen = {}
+  }
+}

@@ -23,6 +23,7 @@ local currentTerm = term.current()
 local w, h = term.getSize()
 
 local threads = {}
+local nextID = 1
 local visibleThread = nil
 local focus = 1
 local barThread = nil
@@ -34,14 +35,15 @@ local unexpected = true
 local function createThread(fn, win)
   local thread = {coroutine = coroutine.create(fn), window = win or window.create(currentTerm, 1, 1, w, h - 1, false), interacted = false}
   thread.current = thread.window
-  table.insert(threads, thread)
+  threads[nextID] = thread
   local curr = term.current()
   term.redirect(thread.window)
   thread.success, thread.filter = coroutine.resume(thread.coroutine)
   thread.current = term.current()
   thread.status = coroutine.status(thread.coroutine)
   term.redirect(curr)
-  return #threads, thread
+  nextID = nextID + 1
+  return nextID - 1, thread
 end
 
 local function switchTo(index)
