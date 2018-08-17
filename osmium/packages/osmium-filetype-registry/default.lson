@@ -34,6 +34,10 @@
       {
         name = "Ink",
         exec = "apps/Ink/startup"
+      },
+      {
+        name = "Edit",
+        exec = "apps/osmium-edit-app/osmium-edit-app.lua"
       }
     },
     canOpen = {}

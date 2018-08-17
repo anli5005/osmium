@@ -475,6 +475,7 @@ function list.create(x, y, w, h, rows, row)
 
   function self.scroll(event)
     scroller.scroll(event)
+    return true
   end
 
   function self.click(event)
@@ -485,7 +486,7 @@ function list.create(x, y, w, h, rows, row)
         local listY = line - self._padding
         local index = math.ceil(listY / self.row.height)
         local row = self._rows[index]
-        self.emit("click", row)
+        self.emit("click", row, event.button, event.x, event.y)
         if self.selectedRow ~= index then
           if self.selectedRow then
             self.emit("deselect", row)

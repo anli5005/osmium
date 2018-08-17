@@ -1,4 +1,5 @@
 local IronScreen = opm.require("iron-screen")
+local IronView = opm.require("iron-view")
 local UI = opm.require("osmium-ui")
 local events = opm.require("iron-events")
 local filesize = opm.require("osmium-filesize")
@@ -9,6 +10,8 @@ function create(window, options)
   self.screen = IronScreen.create(window)
   self.back = {}
   self.forward = {}
+  self.clipboard = nil
+  self.isCutting = false
 
   self.extensions = filetypes.getAll()
 
@@ -372,17 +375,104 @@ function create(window, options)
   end
 
   local lastRowClicked = nil
-  list.on("click", function(row)
-    if lastRowClicked == row then
-      lastRowClicked = nil
-      self.handleDoubleClick(row)
-    else
-      lastRowClicked = row
-      self.screen.loop.timeout(function()
-        if lastRowClicked == row then
-          lastRowClicked = nil
+  list.on("click", function(row, button, x, y)
+    if button == 2 and not options.action then
+      local rows = {}
+      if row.isDir then
+        table.insert(rows, {open = true, text = "Open", path = row.path})
+      else
+        local apps = self.getAppsFor(row.path)
+        for k,v in ipairs(apps) do
+          local row = {text = v.name, exec = v.exec, args = v.args or {}, path = row.path}
+          if v.execute then
+            row.text = "Run File"
+            row.execute = true
+          end
+          table.insert(rows, row)
         end
-      end, 0.4)
+      end
+      local pathIsReadOnly = fs.isReadOnly(row.path)
+      table.insert(rows, {text = "-----------"})
+      table.insert(rows, {copy = true, text = "Copy", path = row.path})
+      if not pathIsReadOnly then
+        table.insert(rows, {cut = true, text = "Cut", path = row.path})
+      end
+      if self.clipboard and fs.exists(self.clipboard) and not fs.isReadOnly(self.dir) then
+        table.insert(rows, {paste = true, text = "Paste", path = row.path})
+      end
+      if not pathIsReadOnly then
+        table.insert(rows, {delete = true, text = "Delete", path = row.path})
+      end
+
+      local menu = UI.list.create(x, y, math.min(w - x + 1, 13), math.min(h - y + 1, 8), rows)
+      local overlay
+      menu.backgroundColor = colors.gray
+      menu.textColor = colors.lightGray
+      menu.row.selectable = false
+      menu.on("click", function(row)
+        if row.exec then
+          local runtimeArgs = {}
+          if row.args then
+            for k,v in ipairs(runtimeArgs) do
+              runtimeArgs[k] = v
+            end
+            table.insert(runtimeArgs, row.path)
+          end
+          osmium.switchTo(osmium.run(row.exec, unpack(runtimeArgs)))
+          self.screen.removeView(menu)
+          self.screen.removeView(overlay)
+        elseif row.execute then
+          osmium.switchTo(osmium.run(row.path, unpack(row.args)))
+          self.screen.removeView(menu)
+          self.screen.removeView(overlay)
+        elseif row.open then
+          self.navigate(row.path)
+          self.screen.removeView(menu)
+          self.screen.removeView(overlay)
+        elseif row.copy then
+          self.isCutting = false
+          self.clipboard = row.path
+          self.screen.removeView(menu)
+          self.screen.removeView(overlay)
+        elseif row.cut then
+          self.isCutting = true
+          self.clipboard = row.path
+          self.screen.removeView(menu)
+          self.screen.removeView(overlay)
+        elseif row.paste then
+          self.isCutting = nil
+          self.clipboard = nil
+          self.screen.removeView(menu)
+          self.screen.removeView(overlay)
+        elseif row.delete then
+          fs.delete(row.path)
+          self.refresh()
+          self.screen.removeView(menu)
+          self.screen.removeView(overlay)
+        end
+      end)
+
+      overlay = IronView.create(1, 1, w, h)
+      function overlay.click()
+        self.screen.removeView(menu)
+        self.screen.removeView(overlay)
+        return false
+      end
+
+      self.screen.addView(overlay)
+      self.screen.addView(menu)
+    elseif button == 1 then
+      if lastRowClicked == row then
+        lastRowClicked = nil
+        self.handleDoubleClick(row)
+      else
+        lastRowClicked = row
+        self.screen.loop.timeout(function()
+          if lastRowClicked == row then
+            lastRowClicked = nil
+          end
+        end, 0.4)
+      end
     end
   end)
   list.on("select", function(row)
