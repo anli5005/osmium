@@ -500,7 +500,7 @@ function list.create(x, y, w, h, rows, row)
           self.redraw()
         end
       else
-        self.emit("paddingClick")
+        self.emit("paddingClick", event.x, event.y)
       end
     end
     return true

@@ -172,11 +172,11 @@ function create(window, options)
       if not fs.exists(path) then
         fs.makeDir(path)
       end
-      self.navigate(path)
       self.screen.removeView(dialog)
       self.screen.removeView(folderName)
       self.screen.removeView(cancel)
       self.screen.removeView(save)
+      self.refresh()
     end)
   end)
 
@@ -374,10 +374,9 @@ function create(window, options)
     end
   end
 
-  local lastRowClicked = nil
-  list.on("click", function(row, button, x, y)
-    if button == 2 and not options.action then
-      local rows = {}
+  local function openContextMenu(row, x, y)
+    local rows = {}
+    if row then
       if row.isDir then
         table.insert(rows, {open = true, text = "Open", path = row.path})
       else
@@ -397,70 +396,86 @@ function create(window, options)
       if not pathIsReadOnly then
         table.insert(rows, {cut = true, text = "Cut", path = row.path})
       end
-      if self.clipboard and fs.exists(self.clipboard) and not fs.isReadOnly(self.dir) then
-        table.insert(rows, {paste = true, text = "Paste", path = row.path})
-      end
-      if not pathIsReadOnly then
-        table.insert(rows, {delete = true, text = "Delete", path = row.path})
-      end
+    end
+    if self.clipboard and fs.exists(self.clipboard) and not fs.isReadOnly(self.dir) and (not self.isCutting or (self.dir:sub(1, #self.clipboard) ~= self.clipboard and self.dir:sub(1, #self.clipboard + 1) ~= "/" .. self.clipboard)) then
+      table.insert(rows, {paste = true, text = "Paste"})
+    end
+    if row and not pathIsReadOnly then
+      table.insert(rows, {delete = true, text = "Delete", path = row.path})
+    end
 
-      local menu = UI.list.create(x, y, math.min(w - x + 1, 13), math.min(h - y + 1, 8), rows)
-      local overlay
-      menu.backgroundColor = colors.gray
-      menu.textColor = colors.lightGray
-      menu.row.selectable = false
-      menu.on("click", function(row)
-        if row.exec then
-          local runtimeArgs = {}
-          if row.args then
-            for k,v in ipairs(runtimeArgs) do
-              runtimeArgs[k] = v
-            end
-            table.insert(runtimeArgs, row.path)
+    local menu = UI.list.create(x, y, math.min(w - x + 1, 13), math.min(h - y + 1, 8), rows)
+    local overlay
+    menu.backgroundColor = colors.gray
+    menu.textColor = colors.lightGray
+    menu.row.selectable = false
+    menu.on("click", function(row)
+      if row.exec then
+        local runtimeArgs = {}
+        if row.args then
+          for k,v in ipairs(row.args) do
+            runtimeArgs[k] = v
           end
-          osmium.switchTo(osmium.run(row.exec, unpack(runtimeArgs)))
-          self.screen.removeView(menu)
-          self.screen.removeView(overlay)
-        elseif row.execute then
-          osmium.switchTo(osmium.run(row.path, unpack(row.args)))
-          self.screen.removeView(menu)
-          self.screen.removeView(overlay)
-        elseif row.open then
-          self.navigate(row.path)
-          self.screen.removeView(menu)
-          self.screen.removeView(overlay)
-        elseif row.copy then
-          self.isCutting = false
-          self.clipboard = row.path
-          self.screen.removeView(menu)
-          self.screen.removeView(overlay)
-        elseif row.cut then
-          self.isCutting = true
-          self.clipboard = row.path
-          self.screen.removeView(menu)
-          self.screen.removeView(overlay)
-        elseif row.paste then
-          self.isCutting = nil
-          self.clipboard = nil
-          self.screen.removeView(menu)
-          self.screen.removeView(overlay)
-        elseif row.delete then
-          fs.delete(row.path)
-          self.refresh()
-          self.screen.removeView(menu)
-          self.screen.removeView(overlay)
+          local path = row.path
+          if path.sub(1,1) ~= "/" then
+            path = "/" .. path
+          end
+          table.insert(runtimeArgs, path)
         end
-      end)
-
-      overlay = IronView.create(1, 1, w, h)
-      function overlay.click()
+        osmium.switchTo(osmium.run(row.exec, unpack(runtimeArgs)))
         self.screen.removeView(menu)
         self.screen.removeView(overlay)
-        return false
+      elseif row.execute then
+        osmium.switchTo(osmium.run(row.path, unpack(row.args)))
+        self.screen.removeView(menu)
+        self.screen.removeView(overlay)
+      elseif row.open then
+        self.navigate(row.path)
+        self.screen.removeView(menu)
+        self.screen.removeView(overlay)
+      elseif row.copy then
+        self.isCutting = false
+        self.clipboard = row.path
+        self.screen.removeView(menu)
+        self.screen.removeView(overlay)
+      elseif row.cut then
+        self.isCutting = true
+        self.clipboard = row.path
+        self.screen.removeView(menu)
+        self.screen.removeView(overlay)
+      elseif row.paste then
+        fs.copy(self.clipboard, fs.combine(self.dir, fs.getName(self.clipboard)))
+        if self.isCutting then
+          fs.delete(self.clipboard)
+        end
+        self.isCutting = nil
+        self.clipboard = nil
+        self.screen.removeView(menu)
+        self.screen.removeView(overlay)
+        self.refresh()
+      elseif row.delete then
+        fs.delete(row.path)
+        self.refresh()
+        self.screen.removeView(menu)
+        self.screen.removeView(overlay)
       end
+    end)
 
-      self.screen.addView(overlay)
-      self.screen.addView(menu)
+    overlay = IronView.create(1, 1, w, h)
+    function overlay.click()
+      self.screen.removeView(menu)
+      self.screen.removeView(overlay)
+      return false
+    end
+
+    self.screen.addView(overlay)
+    self.screen.addView(menu)
+  end
+
+  local lastRowClicked = nil
+  list.on("click", function(row, button, x, y)
+    if button == 2 and not options.action then
+      openContextMenu(row, x, y)
     elseif button == 1 then
       if lastRowClicked == row then
         lastRowClicked = nil
@@ -474,6 +489,9 @@ function create(window, options)
         end, 0.4)
       end
     end
+  end)
+  list.on("paddingClick", function(x, y)
+    openContextMenu(nil, x, y)
   end)
   list.on("select", function(row)
     if row then
