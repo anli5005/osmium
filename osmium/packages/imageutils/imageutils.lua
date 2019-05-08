@@ -1,5 +1,23 @@
 local magiclines = opm.require("magiclines")
 
+---@class Imageutils
+---@field public loaders ImageutilsLoader[]
+---@field public loadFromData fun(data:string,extension:string):ImageutilsBuffer[]
+---@field public loadFromFile fun(file:string):ImageutilsLoader[]
+---@field public drawImage fun(image:ImageutilsBuffer[],alpha:number)
+---@field public crop fun(image:ImageutilsBuffer[],width:number,height:number):ImageutilsBuffer[]
+
+---@class ImageutilsBuffer
+---@field public bg number[][]
+---@field public fg number[][]
+---@field public text number[][]
+
+---@class ImageutilsLoader
+---@field public name string
+---@field public canHandleExtension fun(extension:string):boolean
+---@field public canHandleData fun(data:string):boolean
+---@field public loadFromData fun(data:string):ImageutilsBuffer[]
+
 local function getColourOf(hex)
   -- Code taken from getColourOf in NPaintPro by NitrogenFingers
   local value = tonumber(hex, 16)

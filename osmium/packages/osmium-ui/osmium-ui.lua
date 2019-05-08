@@ -1,7 +1,11 @@
 local IronView = opm.require("iron-view")
 
+---@class OsmiumBoxView: IronView
+---@field public color number
+
 box = {}
 function box.create(x, y, w, h, color)
+  ---@type OsmiumBoxView
   local self = IronView.create(x, y, w, h)
   self.color = color
 
@@ -18,8 +22,14 @@ function box.create(x, y, w, h, color)
   return self
 end
 
+---@class OsmiumTextView: IronView
+---@field public text string
+---@field public backgroundColor number
+---@field public textColor number
+
 text = {}
 function text.create(x, y, w, h, text)
+  ---@type OsmiumTextView
   local self = IronView.create(x, y, w, h)
   self.text = text
   self.backgroundColor = colors.black

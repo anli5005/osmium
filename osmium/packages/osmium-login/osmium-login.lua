@@ -15,10 +15,14 @@ if not fs.exists("/osmium/settings/users.lson") then
   end
 end
 
+---@type IronEventLoop
 local eventLoop = opm.require("iron-event-loop").create()
+
 local w, h = term.getSize()
 local currentTerm = term.current()
 local termWindow = window.create(currentTerm, 1, 1, w, h, true)
+
+---@type IronScreen
 local screen = opm.require("iron-screen").create(termWindow)
 
 local userlist = users.getUsers()

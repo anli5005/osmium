@@ -1,7 +1,17 @@
 local IronView = opm.require("iron-view")
+
+---@type Imageutils
 local imageutils = opm.require("imageutils")
 
+---@class IronContainer: IronView
+---@field public cursorBlink boolean
+---@field public buffer ImageutilsBuffer[]
+---@field private backgroundColor number
+---@field private textColor number
+---@field private cursorPos number[]
+
 function create(x, y, w, h)
+  ---@type IronContainer
   local self = IronView.create(x, y, w, h)
   self.cursorBlink = false
   self.buffer = {{bg = {}, fg = {}, text = {}}}

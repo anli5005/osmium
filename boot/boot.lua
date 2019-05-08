@@ -58,8 +58,8 @@ local function openBootManager(settings)
 end
 
 -- Read boot settings
-if fs.exists("/boot/settings.lua") then
-  local stream = fs.open("/boot/settings.lua", "r")
+if fs.exists("/boot/settings.lson") then
+  local stream = fs.open("/boot/settings.lson", "r")
   local settings = textutils.unserialize(stream.readAll())
   stream.close()
 
@@ -133,7 +133,7 @@ else
   if not term.isColor() then
     term.setTextColor(colors.lightGray)
   end
-  print("/boot/settings.lua not found")
+  print("/boot/settings.lson not found")
   if term.isColor() then
     term.setTextColor(colors.yellow)
   end

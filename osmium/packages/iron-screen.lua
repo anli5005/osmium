@@ -1,4 +1,13 @@
+---@class IronScreen
+---@field public window
+---@field public focusView IronView
+---@field public views IronView[]
+---@field private _callbacks table
+---@field public needsRedraw boolean
+---@field public needsForceRedraw boolean
+
 function create(window)
+  ---@type IronScreen
   local self = {window = window, focusView = nil, views = {}, _callbacks = {}, needsRedraw = false, needsForceRedraw = false}
 
   function self._callbacks.mouse_click(button, globalX, globalY)

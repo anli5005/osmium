@@ -1,6 +1,9 @@
 local events = opm.require("iron-events")
 
+---@class IronEventLoop: IronEventEmitter
+
 function create()
+  ---@type IronEventLoop
   local self = events.create()
 
   self.running = false

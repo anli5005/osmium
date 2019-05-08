@@ -20,8 +20,12 @@ for k,v in pairs(env) do
     o[k] = v
   end
 end
+
+---@type OPM
 _G["opm"] = o
 
+---@class Osmium
+---@field public log fun(message:string)
 local osmium = {}
 
 -- Setup logging

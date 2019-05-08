@@ -1,3 +1,11 @@
+---@class OsmiumLog
+---@field public save fun()
+---@field public log fun(message)
+---@field public logFile string
+---@field public stream table
+---@field public logToTerminal boolean
+---@field public logsUntilSave number
+
 logFile = "/osmium/osmium.log"
 stream = nil
 logToTerminal = false

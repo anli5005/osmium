@@ -1,3 +1,15 @@
+---@class OPM
+---@field public getPackageDirectories fun():string[]
+---@field public setPackageDirectories fun(dirs:string[])
+---@field public addPackageDirectory fun(dir)
+---@field public listPackages fun():string[]
+---@field public resolve fun(name:string):string
+---@field public require fun(name:string):table
+---@field public resolveInfo fun(name:string):string
+---@field public getInfo fun(name:string):table
+---@field public resolveDir fun(name:string):string
+---@field public resolveFile fun(name:string,file:string):string
+
 local directories = {
   "/osmium/packages",
   "/apps"

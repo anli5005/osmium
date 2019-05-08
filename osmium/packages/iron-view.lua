@@ -1,6 +1,17 @@
 local events = opm.require("iron-events")
 
+---@class IronView: IronEventEmitter
+---@field public x number
+---@field public y number
+---@field public w number
+---@field public h number
+---@field public focused boolean
+---@field public screen IronScreen
+---@field public needsRedraw boolean
+---@field public acceptsFocus boolean
+
 function create(x, y, w, h)
+  ---@type IronView
   local self = events.create()
   self.x = x
   self.y = y

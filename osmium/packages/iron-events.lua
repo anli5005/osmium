@@ -1,4 +1,11 @@
+---@class IronEventEmitter
+---@field public _callbacks table<string, fun[]>
+---@field public _onceCallbacks table<string, fun[]>
+---@field public _allCallbacks fun[]
+---@field public _lastCallbacks table<string, fun[]>
+
 function create()
+  ---@type IronEventEmitter
   local self = {_callbacks = {}, _onceCallbacks = {}, _allCallbacks = {}, _lastCallbacks = {}}
 
   function self.on(name, callback)
